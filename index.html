@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSC 4315 - Artificial Intelligence</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        .logo-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .logo-section img {
+            max-width: 600px;
+            width: 100%;
+            height: auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            margin-top: 10px;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .instructor-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .summary-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary-section h2 {
+            color: #2c3e50;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .summary-section h3 {
+            color: #34495e;
+            margin-top: 20px;
+        }
+        .summary-section p {
+            margin: 10px 0;
+        }
+        .summary-section strong {
+            color: #667eea;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .nav-button {
+            flex: 1;
+            min-width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 15px;
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .nav-button.cv-button {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+        }
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .nav-button h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.3em;
+        }
+        .nav-button p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 0.85em;
+        }
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            text-align: center;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-section">
+        <img src="iugb.png" alt="International University of Grand-Bassam Logo">
+    </div>
+
+    <div class="header">
+        <h1>CSC 4315 - Introduction to Artificial Intelligence</h1>
+        <div class="subtitle">Course Lectures</div>
+    </div>
+
+    <div class="instructor-info">
+        <strong>Instructor:</strong> Dr. Guillaume Sanje Mpacko, Ph. D.<br>
+        <strong>Position:</strong> Associate Professor of Artificial Intelligence and Software Engineering
+    </div>
+
+    <div class="summary-section">
+        <h2>📚 Course Outline</h2>
+        <p>
+            These are invidual lecture notes for CSC 4315. This course provides an overview of Artificial Intelligence, starting with a two-rule test, a definition followed by a light historical survey. It proceeds with foundational Python and Mathematics concepts required for hands-on explorations sound understanding of Artificial Neural Networks. It then introduces Python Libraries and Tools required to tackle real-world AI models, discussing real-world Data and related challenges. It progresses to introduce Natural Language Processing, and concludes with getting the best out of Frontier Models, the so called Large Language Models and software agents built from these.
+        </p>
+    </div>
+
+    <div class="nav-buttons">
+        <a href="CSC4315_S01_Is_This_AI.pdf" class="nav-button" target=_blank>
+            <h3>1. 🐍 What is AI?</h3>
+            <p>Two-rule test, and a definition</p>
+        </a>
+        <a href="CSC4315_S02_Three_Paradigms.pdf" class="nav-button" target=_blank>
+            <h3>2. 🤖 Three Paradigms</h3>
+            <p>Rules-based, Search-based, Machine Learning</p>
+        </a>
+        <a href="CSC4315_S03_Eighty_Years_And_Where_We_Are.pdf" class="nav-button" target=_blank>
+            <h3>3. 📖 Eighty Years</h3>
+            <p>Light Historical Survey</p>
+        </a>
+        <!--<a href="" class="nav-button cv-button" target=_blank>
+            <h3>🖼️ </h3>
+            <p></p>
+        </a>-->
+    </div>
+
+    <div class="footer">
+        <p>Last updated: March 2026</p>
+        <p><small>All materials © 2026 Dr. Guillaume Sanje Mpacko, IUGB. For educational use only.</small></p>
+    </div>
+</body>
+</html>
