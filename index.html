@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CSC 4315 — Artificial Intelligence | Fall 2026</title>
+<style>
+:root{
+  --ink:#172033;
+  --muted:#5c667a;
+  --paper:#fbfcfe;
+  --card:#ffffff;
+  --line:#dce3ee;
+  --violet:#6d46d9;
+  --blue:#198fd1;
+  --gold:#d99a19;
+  --green:#208b70;
+  --shadow:0 10px 28px rgba(31,45,72,.09);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 12% 4%, rgba(25,143,209,.10), transparent 27rem),
+    radial-gradient(circle at 88% 2%, rgba(109,70,217,.10), transparent 25rem),
+    var(--paper);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55;
+}
+a{color:inherit}
+.shell{width:min(1080px,calc(100% - 34px));margin:0 auto}
+header{padding:54px 0 30px}
+.eyebrow{
+  display:inline-block;padding:7px 12px;border:1px solid #dec78f;border-radius:999px;
+  background:#fffaf0;color:#755915;font-size:.79rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase
+}
+h1{font-size:clamp(2rem,5vw,3.9rem);line-height:1.02;margin:18px 0 12px;letter-spacing:-.045em}
+h1 .accent{color:var(--violet)}
+.lead{max-width:760px;color:var(--muted);font-size:1.08rem;margin:0}
+.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 12px;color:#4b5568;font-weight:650;font-size:.9rem}
+nav.top{display:flex;gap:10px;flex-wrap:wrap;margin:2px 0 28px}
+nav.top a{
+  text-decoration:none;background:#fff;border:1px solid var(--line);padding:9px 13px;border-radius:10px;
+  color:#344054;font-weight:750
+}
+nav.top a:hover{border-color:#a9b9d0;transform:translateY(-1px)}
+.section-title{font-size:1.35rem;margin:22px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding-bottom:46px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{
+  position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:20px;box-shadow:var(--shadow);text-decoration:none;transition:.18s ease;
+  min-height:146px;display:flex;flex-direction:column
+}
+.card:hover{transform:translateY(-3px);border-color:#b9c6d8;box-shadow:0 14px 34px rgba(31,45,72,.13)}
+.icon{font-size:1.75rem;line-height:1;margin-bottom:14px}
+.card h2,.card h3{margin:0 0 7px;line-height:1.18}
+.card h2{font-size:1.22rem}.card h3{font-size:1.06rem}
+.card p{margin:0;color:var(--muted);font-size:.93rem}
+.card .tag{margin-top:auto;padding-top:15px;color:#50627a;font-size:.8rem;font-weight:800;letter-spacing:.035em}
+.num{
+  position:absolute;right:16px;top:14px;font-size:.75rem;font-weight:900;color:#8b95a7;
+  background:#f5f7fa;border:1px solid #e6ebf2;border-radius:999px;padding:4px 8px
+}
+footer{border-top:1px solid var(--line);padding:22px 0 36px;color:#6b7280;font-size:.88rem}
+@media(max-width:780px){.grid,.grid.two{grid-template-columns:1fr} header{padding-top:36px}}
+
+.logo-wrap{
+  margin:0 0 26px;
+  padding:14px 18px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.logo-wrap img{
+  display:block;
+  width:min(100%, 560px);
+  height:auto;
+  object-fit:contain;
+}
+
+
+.instructor-credit{
+  margin-top:16px;
+  display:inline-flex;
+  flex-direction:column;
+  gap:2px;
+  padding:11px 14px;
+  background:#ffffff;
+  border:1px solid var(--line);
+  border-left:4px solid var(--violet);
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(31,45,72,.06);
+}
+.instructor-credit strong{
+  font-size:.98rem;
+  color:var(--ink);
+}
+.instructor-credit span{
+  font-size:.88rem;
+  color:var(--muted);
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="logo-wrap">
+  <img src="iugb.png" alt="International University of Grand-Bassam — Excellence · Accountability · Opportunity">
+</div>
+
+<header>
+  <span class="eyebrow">IUGB · School of Science &amp; Engineering · Fall 2026</span>
+  <h1>CSC 4315 — <span class="accent">Artificial Intelligence</span></h1>
+  <p class="lead">Course materials organized for quick access to lecture notes, hands-on lab notebooks, and in-class activities.</p>
+  <div class="instructor-credit">
+    <strong>Guillaume Sanje Mpacko, Ph.D.</strong>
+    <span>Associate Professor of Artificial Intelligence and Software Engineering</span>
+  </div>
+
+  <div class="meta">
+    <span class="pill">📚 Lecture Notes</span>
+    <span class="pill">💻 18 Labs</span>
+    <span class="pill">🧭 6 Activities</span>
+  </div>
+</header>
+
+<h2 class="section-title">Course Materials</h2>
+<main class="grid">
+  <a class="card" href="Lectures/">
+    <div class="icon">📚</div>
+    <h2>Lectures</h2>
+    <p>Session-by-session lecture notes for CSC 4315.</p>
+  </a>
+  <a class="card" href="Lab%20Notebooks/">
+    <div class="icon">💻</div>
+    <h2>Lab Notebooks</h2>
+    <p>Eighteen guided and scaffolded labs, from Python foundations to prompting.</p>
+  </a>
+  <a class="card" href="Activities/">
+    <div class="icon">🧭</div>
+    <h2>Activities</h2>
+    <p>Worksheets, demonstrations, explorations, and paper exercises used in class.</p>
+  </a>
+</main>
+<footer>CSC 4315 · Artificial Intelligence · International University of Grand-Bassam</footer>
+</div>
+</body>
+</html>
