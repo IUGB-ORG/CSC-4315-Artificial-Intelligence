@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 3 — Eighty Years in One Slide</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #faf9f6; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fde68a;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 4px 24px rgba(15,14,23,0.08);
+    --card-shadow-hover: 0 12px 40px rgba(15,14,23,0.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  .hero { background: var(--ink); color: var(--paper); padding: 76px 40px 56px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 75% 25%, rgba(225,29,72,0.28) 0%, transparent 58%),
+                radial-gradient(ellipse at 15% 85%, rgba(2,132,199,0.3) 0%, transparent 55%),
+                radial-gradient(ellipse at 92% 92%, rgba(232,168,56,0.22) 0%, transparent 50%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: rgba(232,168,56,0.2); border: 1px solid var(--gold);
+    color: var(--gold-light); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { font-size: 1.12rem; color: rgba(250,249,246,0.78); max-width: 660px; margin-bottom: 32px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--paper); padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.1); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; }
+  .toc a { color: rgba(250,249,246,0.65); text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    padding: 14px 15px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  .module-header { margin: 56px 0 28px; padding: 30px 34px; border-radius: 16px; position: relative; overflow: hidden; }
+  .module-header.teal { background: var(--teal); }
+  .module-header.violet { background: var(--violet); }
+  .module-header.gold { background: #92400e; }
+  .module-header.sky { background: #075985; }
+  .module-header.rose { background: #9f1239; }
+  .module-header.ink { background: var(--ink); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', serif; font-size: 5rem;
+    font-weight: 900; color: rgba(255,255,255,0.12); line-height: 1; }
+  .module-header .mod-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .module-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+    color: #fff; line-height: 1.2; }
+  .module-header p { color: rgba(255,255,255,0.82); margin-top: 8px; font-size: 0.97rem; max-width: 620px; }
+
+  h3 { font-family: 'Playfair Display', serif; font-size: 1.32rem; font-weight: 700; margin: 38px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    box-shadow: var(--card-shadow); transition: box-shadow 0.25s, transform 0.25s; }
+  .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-3px); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 14px; box-shadow: var(--card-shadow); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--ink); color: var(--paper); }
+  thead th { padding: 13px 15px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 12px 15px; font-size: 0.88rem; vertical-align: top; }
+  tbody tr:hover { background: var(--cream); }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.yr { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--sky); white-space: nowrap; }
+
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip { background: var(--teal-light); border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3; border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light); border-left: 4px solid var(--sky); }
+  .callout.try { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light); border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body strong { display: block; margin-bottom: 4px; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: var(--gold-light); border: 1px solid #d9a441; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 24px 28px; margin: 28px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.05rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+  .bigidea p + p { margin-top: 12px; }
+
+  .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 18px 0; box-shadow: var(--card-shadow); }
+  .code-header { background: #2a2a3d; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .code-header span { color: rgba(255,255,255,0.55); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal); color: #fff; font-size: 0.7rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; }
+  pre { padding: 20px 22px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; line-height: 1.65; color: #cdd6f4; }
+  .kw { color: #cba6f7; } .str { color: #a6e3a1; } .cm { color: #6c7086; font-style: italic; }
+  .fn { color: #89b4fa; } .num { color: #fab387; } .var { color: #f38ba8; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    margin: 24px 0; box-shadow: var(--card-shadow); overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  .step-list { list-style: none; margin: 16px 0; }
+  .step-list li { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; flex-shrink: 0; }
+  .step-text strong { display: block; margin-bottom: 3px; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.idea { background: var(--violet-light); color: #5b21b6; }
+  .pill.winter { background: #dbeafe; color: #1e3a8a; }
+  .pill.proof { background: #ccfbf1; color: #115e59; }
+  .pill.boom { background: var(--gold-light); color: #78350f; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 16px; margin: 26px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center;
+    box-shadow: var(--card-shadow); }
+  .stat .big { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 900; color: var(--ink); line-height: 1.05; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--slate); margin-top: 8px; }
+  .stat.alert .big { color: var(--rose); }
+  .stat.good .big { color: var(--teal); }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 2px 6px; border-radius: 5px; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px;
+    margin: 18px 0; box-shadow: var(--card-shadow); }
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 14px; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 1600px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .rbtn { background: var(--ink); color: var(--paper); border: none; border-radius: 100px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; }
+  .rbtn:hover { background: var(--teal); }
+
+  .refs { font-size: 0.85rem; color: var(--slate); }
+  .refs li { margin-bottom: 8px; }
+  .refs a { color: var(--sky); text-decoration: none; border-bottom: 1px solid #bae6fd; }
+  .refs a:hover { border-bottom-color: var(--sky); }
+
+  footer { background: var(--ink); color: rgba(250,249,246,0.55); text-align: center;
+    padding: 32px 20px; font-size: 0.85rem; margin-top: 60px; }
+  footer strong { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 48px 20px 40px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ════ light format (applied Sept 2026): overrides the dark theme above ════ */
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 3 · Tuesday 15 September 2026</div>
+    <h1>Eighty years,<br><em>and where we actually are</em></h1>
+    <p class="lead">This field has collapsed publicly twice, and both times the cause was the same. You will compute, yourself, the one number that explains why the breakthrough came in 2012 and could not have come in 1989 — and then we bring the story to this month: what these systems really do, how to read a leaderboard without being fooled, and why this course is being taught in Grand-Bassam.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 0 · What AI is</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">One calculation, done in class</span>
+      <span class="tag">Last session before Python</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#timeline">The timeline</a>
+  <a href="#winters">Two winters</a>
+  <a href="#already">Already there</a>
+  <a href="#compute">Compute it</a>
+  <a href="#works">What works now</a>
+  <a href="#leaderboard">Leaderboards</a>
+  <a href="#gap">The unmeasured gap</a>
+  <a href="#ci">Côte d'Ivoire</a>
+  <a href="#next">Before Friday</a>
+</div></nav>
+
+<div class="page">
+<div class="callout warn">
+  <div class="callout-icon">⏱️</div>
+  <div class="callout-body">
+    <strong>Delivery note — this session carries what used to be two</strong>
+    <p>Seventy-eight minutes of material in an eighty-minute slot, so it runs to time only if it runs to plan. Two rules if you fall behind. <strong>Part 4 is not negotiable</strong> — the compute calculation is the single thing this session exists to make them do, and it is the only part with no substitute in the reading. <strong>Part 7 is the release valve</strong>: the unmeasured-gap argument survives being cut to three sentences and a pointer to the reading, and the closing on Côte d\'Ivoire must not be rushed, because it is the answer to "why am I sitting in this room".</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ TIMELINE ══════════════════════════ -->
+<div class="module-header ink" data-num="1" id="timeline">
+  <div class="mod-label">Part 1 · 10 minutes</div>
+  <h2>The whole history, once, quickly</h2>
+  <p>Do not memorise this table. Read it for one thing: where the ideas sit relative to where the money sits.</p>
+</div>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th style="width:88px">Year</th><th style="width:26%">What happened</th><th>Why it matters to you</th></tr></thead>
+  <tbody>
+    <tr><td class="yr">1943</td><td><strong>The artificial neuron</strong> <span class="pill idea">idea</span></td><td>McCulloch and Pitts show a simple threshold unit can compute logical functions. It is the unit you will build in session 13 — <em>thirteen years before the field has a name.</em></td></tr>
+    <tr><td class="yr">1950</td><td><strong>Turing's test</strong> <span class="pill idea">idea</span></td><td>Replaces the unanswerable "can machines think?" with something you can actually run.</td></tr>
+    <tr><td class="yr">1956</td><td><strong>Dartmouth</strong> <span class="pill boom">boom</span></td><td>The phrase "artificial intelligence" is coined at a summer workshop. Two months, about ten men, and enormous confidence.</td></tr>
+    <tr><td class="yr">1958</td><td><strong>The perceptron</strong> <span class="pill idea">idea</span></td><td>Rosenblatt builds a machine that learns its own weights from examples. The first learning-based system in this course's sense — but only one layer of weights.</td></tr>
+    <tr><td class="yr">1966</td><td><strong>The ALPAC report</strong> <span class="pill winter">chill</span></td><td>Concludes machine translation is slower, less accurate and more expensive than using human translators. US funding for it collapses.</td></tr>
+    <tr><td class="yr">1969</td><td><strong>Proof of the limit</strong> <span class="pill winter">chill</span></td><td>Minsky and Papert show a single-layer perceptron cannot learn XOR. You will reproduce this failure yourself in session 12.</td></tr>
+    <tr><td class="yr">1973</td><td><strong>The Lighthill report</strong> <span class="pill winter">winter</span></td><td>A review for the British Science Research Council finds the field has not delivered what it promised, and names combinatorial explosion as the barrier. UK funding is cut across universities.</td></tr>
+    <tr><td class="yr">1974–80</td><td><strong>The first winter</strong> <span class="pill winter">winter</span></td><td>Funding withdrawn on both sides of the Atlantic.</td></tr>
+    <tr><td class="yr">1975–86</td><td><strong>Expert systems</strong> <span class="pill boom">boom</span></td><td>MYCIN, XCON, and a commercial industry. You met these on Friday.</td></tr>
+    <tr><td class="yr">1986</td><td><strong>Backpropagation</strong> <span class="pill idea">idea</span></td><td>Rumelhart, Hinton and Williams show how to spread error across many layers. <strong>Every model in this course still trains this way.</strong> You will derive it in session 14.</td></tr>
+    <tr><td class="yr">1987–93</td><td><strong>The second winter</strong> <span class="pill winter">winter</span></td><td>The expert-system market vanishes. Companies built on it fail.</td></tr>
+    <tr><td class="yr">1989–98</td><td><strong>Convolutional networks, in production</strong> <span class="pill proof">proof</span></td><td>LeCun's networks read handwritten digits. Deployed commercially from 1993 in cheque-reading machines; by the late 1990s reading over 10% of all cheques in the United States.</td></tr>
+    <tr><td class="yr">1997</td><td><strong>Deep Blue · LSTM</strong> <span class="pill proof">proof</span></td><td>Search-based AI's high point. In the same year, Hochreiter and Schmidhuber publish the LSTM, which ran language modelling until 2017.</td></tr>
+    <tr><td class="yr">2012</td><td><strong>AlexNet</strong> <span class="pill boom">boom</span></td><td>The error rate falls off a cliff. Everything after this is downstream of it.</td></tr>
+    <tr><td class="yr">2017</td><td><strong>Transformers</strong> <span class="pill idea">idea</span></td><td>One architecture, eight authors, and the foundation of every system you will read about in the news. Session 25.</td></tr>
+    <tr><td class="yr">2022–26</td><td><strong>The public era</strong> <span class="pill boom">boom</span></td><td>ChatGPT reaches a hundred million users in two months. Then images, video, code, agents.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <div class="callout-icon">👀</div>
+  <div class="callout-body">
+    <strong>Read the colours, not the entries</strong>
+    <p>Notice that the <span class="pill idea">ideas</span> are spread evenly across the whole table, while the <span class="pill boom">booms</span> and <span class="pill winter">winters</span> cluster. The supply of good ideas was roughly constant. What oscillated was the willingness to pay for them. Hold that thought for the rest of the session.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ WINTER 1 ══════════════════════════ -->
+<div class="module-header sky" data-num="2" id="winters">
+  <div class="mod-label">Part 2 · 10 minutes</div>
+  <h2>Two winters, one cause</h2>
+  <p>Two reports, eight years apart, ended the field's first golden age. Neither of them said the technology did not work.</p>
+</div>
+
+<p>Machine translation had been promised inside a decade. Russian in, English out, fully automatic. The money followed the promise. By 1966 the Automatic Language Processing Advisory Committee reported back that machine translation was slower than human translation, less accurate than human translation, and more expensive than human translation. Funding for it in the United States effectively stopped.</p>
+
+<p>The deeper problem was one you have already met. In 1973 Sir James Lighthill reviewed the state of UK AI research for the British Science Research Council. His verdict was that in no area had the field produced the impact that had been promised, and his central technical objection was <strong>combinatorial explosion</strong> — the same wall we walked into on Friday when we computed 10<sup>120</sup> for chess.</p>
+
+<div class="bigidea">
+  <div class="bi-label">The argument that closed the labs</div>
+  <p>Lighthill's case was not that the programs failed. It was that they succeeded on small problems and that the search space grows exponentially, so success on a toy problem tells you nothing about the real one. A technique that handles a three-block world does not scale to a warehouse. It gets exponentially worse.</p>
+  <p>He was <em>right about search</em>. And he was wrong about the field, because the way out was not a better search algorithm — it was a different paradigm entirely, and it arrived thirty-nine years later.</p>
+</div>
+
+<p>British AI funding was cut across universities. Researchers left the field or left the country. In the United States, DARPA reduced its support in the same period. The reports gave the sceptics the ammunition; the promises had loaded the gun.</p>
+
+
+<h3>The second winter, 1987–1993</h3>
+
+
+<div class="callout info">
+  <div class="callout-icon">⚖️</div>
+  <div class="callout-body">
+    <strong>What I am not saying</strong>
+    <p>I hold no position on whether the current wave breaks. Anyone who tells you confidently either way is guessing. What I do hold firmly: the capabilities we will build in this course work <em>today</em>, on a laptop, and your ability to build them does not depend on the forecast. That is why this course teaches you to construct things rather than to have opinions about them.</p>
+  </div>
+</div>
+
+
+<div class="callout warn">
+  <div class="callout-icon">⚠️</div>
+  <div class="callout-body">
+    <strong>The same cause, twice</strong>
+    <p>Neither collapse was caused by a technical result. Both were caused by the distance between what had been promised and what had been delivered, and in both cases the promise was made by people who genuinely believed it. Hold on to that when you read a press release this year. The question to ask is not "is this impressive?" but "what exactly was promised, by when, and who is holding the receipt?"</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ ALREADY THERE ══════════════════════════ -->
+<div class="module-header violet" data-num="3" id="already">
+  <div class="mod-label">Part 3 · 8 minutes</div>
+  <h2>The uncomfortable fact: the mathematics was already there</h2>
+  <p>The part of this history that surprises people who have only read about 2012.</p>
+</div>
+
+<p>There is a popular story in which deep learning was invented around 2012 by a small number of people who had a brilliant new idea. Look again at the timeline and count the years.</p>
+
+<div class="stat-row">
+  <div class="stat"><div class="big">1943</div><div class="lbl">The artificial neuron</div></div>
+  <div class="stat"><div class="big">1958</div><div class="lbl">Learning from examples</div></div>
+  <div class="stat"><div class="big">1986</div><div class="lbl">Backpropagation</div></div>
+  <div class="stat"><div class="big">1998</div><div class="lbl">Convolutional nets, in production</div></div>
+</div>
+
+<p>Backpropagation — the algorithm you will derive by hand in session 14, the algorithm that trains every model in this course and every frontier model in existence — was published in 1986. <strong>Twenty-six years before AlexNet.</strong></p>
+
+<p>Convolutional networks were not a promising laboratory idea in 2012. They were a shipped product. LeCun's networks were reading handwritten zip codes at Bell Labs in 1989, were deployed commercially in cheque-reading machines from 1993, and by the late 1990s were reading more than one cheque in ten in the United States — around twenty million cheques a day by 2001. Filters, pooling, a learned hierarchy, trained by backpropagation. Every structural idea in AlexNet was present in LeNet-5.</p>
+
+<div class="bigidea">
+  <div class="bi-label">So ask the obvious question</div>
+  <p>If the neuron was 1943, the training algorithm was 1986, and working convolutional networks were reading a tenth of America's cheques by 1998 — <strong>why did nothing happen until 2012?</strong></p>
+  <p>The honest answer is not a story about genius. It is a story about arithmetic, and you are going to do the arithmetic yourself in the next fifteen minutes.</p>
+</div>
+
+
+<!-- ══════════════════════════ COMPUTE ══════════════════════════ -->
+<div class="module-header teal" data-num="4" id="compute">
+  <div class="mod-label">Part 4 · 14 minutes · do this in class</div>
+  <h2>Why 2012 and not 1989 — compute it yourself</h2>
+  <p>Four multiplications and one division. No calculus, no code. Just the size of the job and the speed of the machine.</p>
+</div>
+
+<p>Here are the published facts about training AlexNet in 2012. Nothing here is a secret; it is all in the paper.</p>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th>Quantity</th><th style="width:32%">Value</th><th>Where it comes from</th></tr></thead>
+  <tbody>
+    <tr><td class="rowlab">Operations in one forward pass</td><td>≈ 1.1 × 10<sup>9</sup></td><td>The architecture: 5 convolutional + 3 fully-connected layers</td></tr>
+    <tr><td class="rowlab">Cost of forward + backward</td><td>≈ 3 × forward</td><td>Standard rule of thumb; you will see why in session 14</td></tr>
+    <tr><td class="rowlab">Training images</td><td>1.2 × 10<sup>6</sup></td><td>The ImageNet training set, 1000 classes</td></tr>
+    <tr><td class="rowlab">Passes over the data (epochs)</td><td>90</td><td>Reported in the paper</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>Step 1 — how big is the job?</h4>
+
+<div class="code-block">
+  <div class="code-header"><span>arithmetic — do it on paper, then check in a notebook</span><span class="code-lang">python</span></div>
+<pre>work_per_image = <span class="num">3</span> * <span class="num">1.1e9</span>            <span class="cm"># forward + backward</span>
+total          = work_per_image * <span class="num">1.2e6</span> * <span class="num">90</span>
+
+<span class="fn">print</span>(total)     <span class="cm"># 3.564e+17  →  about 360 quadrillion operations</span></pre>
+</div>
+
+<h4>Step 2 — how fast was the machine?</h4>
+
+<p>AlexNet was trained on two NVIDIA GTX 580 graphics cards, each with 3 GB of memory. Peak throughput of one card is about 1.58 × 10<sup>12</sup> operations per second. Real code never reaches peak; assume 30%, which is generous but not absurd.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>two GTX 580s, 2012</span><span class="code-lang">python</span></div>
+<pre>speed_2012 = <span class="num">2</span> * <span class="num">1.581e12</span> * <span class="num">0.30</span>       <span class="cm"># ≈ 9.5e11 ops/second</span>
+seconds    = total / speed_2012
+
+<span class="fn">print</span>(seconds / <span class="num">86400</span>)   <span class="cm"># 4.3 days</span></pre>
+</div>
+
+<div class="callout tip">
+  <div class="callout-icon">✅</div>
+  <div class="callout-body">
+    <strong>Sanity check — and this is the point of doing it</strong>
+    <p>The paper reports that training took five to six days. You just estimated 4.3 days from four published numbers and one assumption. Landing that close means the model of "size of job ÷ speed of machine" is capturing something real. Now we can trust it for the counterfactual.</p>
+  </div>
+</div>
+
+<h4>Step 3 — the counterfactual</h4>
+
+<p>Now run the same job on the hardware that was available when backpropagation was published and LeCun's networks were being built. A good scientific workstation of that era ran on the order of 10 million operations per second.</p>
+
+<div class="quiz">
+  <h5>Before you compute it — write down your guess</h5>
+  <p class="q-sub">How long would that same training run have taken in 1989? Commit to a number. Most people are wrong by a factor of a hundred.</p>
+  <button class="rbtn" onclick="tog('r1')">Show the answer</button>
+  <div class="reveal" id="r1">
+    <p><code>3.564e17 / 1e7 = 3.56e10 seconds</code></p>
+    <p>Divide by the number of seconds in a year (about 3.16 × 10<sup>7</sup>):</p>
+    <p style="font-size:1.15rem"><strong>≈ 1,130 years.</strong></p>
+    <p>Start the job in 1989 and it finishes in the year 3119. Even on a machine ten times faster than the one assumed, it is still 113 years. There is no amount of cleverness, funding or persistence that closes a gap of that size.</p>
+    <p><strong>This is the answer to "why 2012 and not 1989".</strong> Not a missing idea. Not a lack of talent. The job was simply, arithmetically, impossible to run — and the people trying were not failing, they were early.</p>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat good"><div class="big">4.3<span style="font-size:1.1rem"> days</span></div><div class="lbl">On 2012 hardware · estimated</div></div>
+  <div class="stat good"><div class="big">5–6<span style="font-size:1.1rem"> days</span></div><div class="lbl">On 2012 hardware · reported</div></div>
+  <div class="stat alert"><div class="big">≈1 130<span style="font-size:1.1rem"> years</span></div><div class="lbl">The same job in 1989</div></div>
+</div>
+
+<div class="callout info">
+  <div class="callout-icon">🎮</div>
+  <div class="callout-body">
+    <strong>And notice where the hardware came from</strong>
+    <p>Nobody built the GTX 580 for artificial intelligence. It was built to render video games. It happens to do the one operation a neural network layer needs — the same multiply-and-add, over and over, on thousands of numbers at once. The field's decisive instrument was a side effect of the games industry. In session 7 you will write that operation as a single line of NumPy and see exactly why a graphics card is the right shape for it.</p>
+  </div>
+</div>
+
+<h4>The second gift: the data</h4>
+
+<p>Compute was half of it. The other half was ImageNet — 1.2 million labelled training images across a thousand categories, assembled over years by people paying human beings to label pictures. Backpropagation with no data teaches a network nothing. In 1989 the data did not exist either, and building it was a logistical project, not a research one.</p>
+
+
+<!-- ══════════════════════════ BRIDGE ══════════════════════════ -->
+<div class="bigidea">
+  <div class="bi-label">The hinge of this session</div>
+  <p>Everything up to here is history. Everything after it is the present — and it is the same story. What made 2012 possible was not a cleverer idea but more data and more compute, and what determines who benefits in 2026 is still, largely, who has data and who has compute. Keep that in your head for the next forty minutes.</p>
+</div>
+
+<!-- ══════════════════════════ WORKS ══════════════════════════ -->
+<div class="module-header ink" data-num="5" id="works">
+  <div class="mod-label">Part 5 · 8 minutes</div>
+  <h2>What actually works, in September 2026</h2>
+  <p>Not what is promised. Not what is demonstrated on stage. What you can rely on next week.</p>
+</div>
+
+<p>I am going to avoid naming a best model, and you should understand why rather than assume I am dodging. Any ranking I give you today will be wrong by December — these systems are replaced on a timescale of months. What does not go stale is the shape of the capability. So: three tiers.</p>
+
+<div class="card-grid">
+  <div class="card"><div class="card-icon">✅</div><h4><span class="pill works">RELIABLE</span></h4>
+    <p>Transcribing speech in a well-resourced language. Translating between well-resourced languages. Classifying images into known categories. Drafting, summarising and rewriting text. Writing routine code and explaining unfamiliar code. Extracting structured fields from documents.</p></div>
+  <div class="card"><div class="card-icon">⚠️</div><h4><span class="pill super">WORKS WITH SUPERVISION</span></h4>
+    <p>Multi-step reasoning. Anything numerical. Any claim of fact, citation or reference. Long agentic tasks with several tools. Code touching an unfamiliar codebase. All of this is useful and none of it is trustworthy unattended.</p></div>
+  <div class="card"><div class="card-icon">❌</div><h4><span class="pill no">DOES NOT WORK</span></h4>
+    <p>Knowing what it does not know. Reliable arithmetic without a tool. Genuine novelty outside the training distribution. Any language with little text on the internet. Guarantees of any kind.</p></div>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">The most useful single sentence about these systems</div>
+  <p>They are excellent at tasks where <em>plausible</em> and <em>correct</em> coincide, and dangerous exactly where those two come apart.</p>
+  <p>Writing a paragraph in the style of a report: plausible is correct. Citing the paper that paragraph refers to: plausible is <em>not</em> correct, and the system cannot tell the difference — because nothing in its training taught it to represent that difference. Session 27 explains why in mechanical terms. For now, use the sentence as a filter.</p>
+</div>
+
+
+<!-- ══════════════════════════ LEADERBOARD ══════════════════════════ -->
+<div class="module-header sky" data-num="6" id="leaderboard">
+  <div class="mod-label">Part 6 · 10 minutes</div>
+  <h2>How to read a leaderboard</h2>
+  <p>This is a skill, and it will still be worth something in ten years. A ranking is worth about six weeks.</p>
+</div>
+
+<p>You will be shown leaderboards constantly — in vendor pitches, in the press, in papers, by colleagues arguing about which model to adopt. Four things go wrong with them, and once you can name all four you will read them better than most people who cite them.</p>
+
+<h3>Problem 1 — Saturation</h3>
+
+<p>When every frontier model scores above 88% on a benchmark, the remaining differences are inside the noise. MMLU, for years the most-cited general capability test, is functionally saturated: the gap between first and fourth place at the top of that board tells you nothing you can act on. GSM8K, the grade-school maths benchmark, is now answered at around 99% by frontier systems, which makes it useful only for evaluating small models — it can no longer distinguish large ones.</p>
+
+<p>A saturated benchmark does not stop being published. It stops being informative, which is worse, because the number still looks like information.</p>
+
+<h3>Problem 2 — Contamination</h3>
+
+<p>A benchmark is a fixed set of questions published on the internet. Models are trained on the internet. You can see the difficulty.</p>
+
+<p>If the test items are in the training data, the score measures recall rather than reasoning — and it collapses the moment you hand the model a fresh question of the same type. This is not hypothetical or rare. Training corpora are now so large that the labs themselves have limited certainty about what is inside them.</p>
+
+<div class="callout stop">
+  <div class="callout-icon">📉</div>
+  <div class="callout-body">
+    <strong>A concrete example worth remembering</strong>
+    <p>In February 2026, OpenAI's evaluations team announced it would stop reporting SWE-bench Verified — for three years the unofficial scoreboard for whether a model can write real software. Not because their score was bad. Because contamination had made the number stop meaning anything. When the organisation with the strongest incentive to cite a favourable benchmark walks away from it, that is worth more than any single score on it.</p>
+  </div>
+</div>
+
+<h3>Problems 3 and 4 — who built it, and the column nobody reads</h3>
+
+<p>Ask who assembled the board. A vendor's own comparison selects the benchmarks on which that vendor wins, and does so without lying about a single number. An independent board is better, but someone still chose which tasks count as "capability", and that choice is an argument rather than a measurement.</p>
+
+<p>Then look for the column that is almost never in the headline: <strong>cost, latency, and whether the thing can run where you need it to run</strong>. A model two points better and forty times more expensive is the worse choice for nearly every real deployment, and a model you cannot run offline is no help at all in a field where the network is unreliable. The ranking answers a question you were not asking.</p>
+
+<!-- ══════════════════════════ EXERCISE ══════════════════════════ -->
+<h3 id="exercise">Do this now — five minutes</h3>
+
+<p>A vendor sends you this table to justify adopting Model A. Find as many problems as you can before opening the answer.</p>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th>Model</th><th class="mono">MMLU</th><th class="mono">GSM8K</th><th class="mono">Arena rank</th><th class="mono">Cost / 1M tokens</th></tr></thead>
+  <tbody>
+    <tr style="background:#fff9e6"><td class="rowlab">Model A <em>(ours)</em></td><td class="mono">91.2</td><td class="mono">98.7</td><td class="mono">#1</td><td class="mono">$18.00</td></tr>
+    <tr><td class="rowlab">Model B</td><td class="mono">90.4</td><td class="mono">98.1</td><td class="mono">#3</td><td class="mono">$2.50</td></tr>
+    <tr><td class="rowlab">Model C</td><td class="mono">89.8</td><td class="mono">99.0</td><td class="mono">#2</td><td class="mono">$0.80</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="quiz">
+  <h5>How many did you find?</h5>
+  <p class="q-sub">There are at least six. Write your list first.</p>
+  <button class="rbtn" onclick="tog('r1')">Show the answer</button>
+  <div class="reveal" id="r1">
+    <p><strong>1. Both benchmarks are saturated.</strong> All three models are above 88% on MMLU and above 98% on GSM8K. The 0.8-point MMLU spread between A and B is not a capability difference you can act on; it is noise dressed as a decimal.</p>
+    <p><strong>2. Both benchmarks are public and static.</strong> Contamination is not merely possible, it should be your default assumption. These numbers partly measure memory.</p>
+    <p><strong>3. Model C beats Model A on GSM8K</strong> — and the table is arranged so you read left to right and stop. Always read every column, including the ones that do not flatter the pitch.</p>
+    <p><strong>4. The arena rank has no confidence interval.</strong> Rank #1 and rank #3 in a preference arena routinely sit inside overlapping intervals, which means the ordering may not be statistically real at all. Ask for the interval; if it is not offered, the rank is decoration.</p>
+    <p><strong>5. Model A costs 22.5× Model C.</strong> For a 1.4-point MMLU difference that is inside the noise. On any workload with volume, this is the only column that matters.</p>
+    <p><strong>6. The vendor made the table.</strong> No harness is stated, no evaluation date, no methodology, and the benchmarks chosen are the ones their model wins. Note also what is <em>absent</em>: nothing here tests your actual task.</p>
+    <p><strong>The professional answer is not "Model C".</strong> It is: <em>none of this tells me anything. Give me two hundred examples of my own task and I will evaluate all three myself.</em> That is what session 21 teaches you to do properly.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ GAP ══════════════════════════ -->
+<div class="module-header violet" data-num="7" id="gap">
+  <div class="mod-label">Part 7 · 8 minutes</div>
+  <h2>The gap that is on no leaderboard</h2>
+  <p>Everything above was about how well these systems work. Now: for whom.</p>
+</div>
+
+<p>Africa has more than two thousand languages. A 2025 survey of six large language models, eight smaller multilingual models and six African-specialised models found roughly forty-two African languages supported in total — and only four appearing consistently across models: Amharic, Swahili, Afrikaans and Malagasy. That leaves <strong>over 98% of African languages with essentially no support</strong>. Twenty writing systems in active use are not handled at all.</p>
+
+<div class="stat-row">
+  <div class="stat"><div class="big">2 000+</div><div class="lbl">African languages</div></div>
+  <div class="stat alert"><div class="big">~42</div><div class="lbl">Supported across surveyed models</div></div>
+  <div class="stat alert"><div class="big">4</div><div class="lbl">Consistently supported</div></div>
+  <div class="stat alert"><div class="big">98%+</div><div class="lbl">With no meaningful support</div></div>
+</div>
+
+<p>And where support exists, it is thinner than the marketing suggests. On IrokoBench, a benchmark built specifically for African languages, the best model tested showed a performance gap of up to <strong>28 points against English</strong> and up to <strong>19 points against French</strong>. Not a rounding difference — a different product.</p>
+
+<div class="callout warn">
+  <div class="callout-icon">🗣️</div>
+  <div class="callout-body">
+    <strong>This is not an abstract concern in this room</strong>
+    <p>In one large study, Bambara — a Mande language, closely related to the Dioula spoken widely across this country — was among the languages whose model performance correlated <em>least</em> with every other language tested. The researchers attributed this to Mande grammar differing sharply from the language families that dominate training data. Techniques that transfer well between European languages do not transfer here. The problem is not that nobody got around to Dioula. It is structural.</p>
+  </div>
+</div>
+
+<h3>Why this happens, and why it is the same story as session 3</h3>
+
+<p>On Tuesday we established that the 2012 breakthrough waited twenty-six years for compute and labelled data, and that both arrived from outside the field. The language gap is the identical mechanism, running now.</p>
+
+<p>Training a frontier model needs trillions of tokens of text and a compute budget in the tens to hundreds of millions of dollars. A language with little text on the internet cannot supply the first, and most institutions cannot supply the second. Even tokenisation works against you: the tokenizers are fitted to high-resource languages, so a low-resource language is chopped into more pieces, costs more per sentence, and fits worse in a context window. The disadvantage compounds at every layer.</p>
+
+<div class="bigidea">
+  <div class="bi-label">The consequence, stated without comfort</div>
+  <p>If the binding constraint on this field is infrastructure rather than insight, then whoever builds the infrastructure decides what gets built. Nobody is going to assemble a Dioula corpus on your behalf.</p>
+  <p>That is not a complaint. It is a description of an opening — the kind that, in 2009, was called "a labelled image dataset nobody wants to build."</p>
+</div>
+
+
+<!-- ══════════════════════════ CI ══════════════════════════ -->
+<div class="module-header gold" data-num="8" id="ci">
+  <div class="mod-label">Closing · 6 minutes</div>
+  <h2>Côte d'Ivoire, and why this course exists</h2>
+  <p>The national position, the ambition, and the honest distance between them.</p>
+</div>
+
+<p>In the 2023 Oxford Insights Government AI Readiness Index, Côte d'Ivoire ranked <strong>138th of 193 countries</strong>. That assessment is part of what produced the response.</p>
+
+<p>In March 2025 the Ministry of Digital Transition and Digitalisation, with support from the World Bank, formalised the <strong>Stratégie Nationale de l'Intelligence Artificielle — SNIA 2030</strong>. Its stated aim is to position Côte d'Ivoire as a regional leader in AI adoption in West Africa by 2030.</p>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th style="width:26%">SNIA 2030</th><th></th></tr></thead>
+  <tbody>
+    <tr><td class="rowlab">Three pillars</td><td>Investment · Inclusion · Governance</td></tr>
+    <tr><td class="rowlab">Budget</td><td>Over 1,000 billion FCFA — roughly USD 1.8 billion — to 2030</td></tr>
+    <tr><td class="rowlab">Institutions</td><td>A National AI Agency (ANIA), and a national committee for AI and data governance</td></tr>
+    <tr><td class="rowlab">Priority sectors</td><td>Agriculture, health, education, public administration</td></tr>
+    <tr><td class="rowlab">Governance instrument</td><td>A "Safe AI Côte d'Ivoire" certification, developed with UNESCO</td></tr>
+    <tr><td class="rowlab">Education aim</td><td>AI fundamentals in school curricula; new talent trained through international partnerships</td></tr>
+    <tr><td class="rowlab">Companion strategy</td><td>SNGD 2030, on national data governance — presented alongside it</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout info">
+  <div class="callout-icon">🎯</div>
+  <div class="callout-body">
+    <strong>Read the pillars against what you learned today</strong>
+    <p>Investment answers the compute constraint. Inclusion answers the language and data constraint. Governance answers the deployment constraint that killed MYCIN — a system that worked and was never used, because nobody had resolved who is responsible when it is wrong. The three pillars are not slogans; each one names a real bottleneck you have now met by its technical name.</p>
+  </div>
+</div>
+
+<p>Now the honest part. A strategy is a document. 138th place is a measurement. The distance between them is closed by people who can build things, and that is a smaller group than the country needs. There are twenty-six sessions left in this course, and at the end of them you will have written a neural network from nothing, trained it, and built a small language model. That is not a complete answer to a national strategy. It is, however, exactly the kind of person the strategy is short of.</p>
+
+<div class="bigidea">
+  <div class="bi-label">Why this course is taught the way it is</div>
+  <p>You could learn to call an API in an afternoon, and thousands of people here already have. That skill is real and it is also common, and it leaves you dependent on infrastructure built elsewhere for problems defined elsewhere.</p>
+  <p>Understanding what is inside the box is what lets you build one for a problem nobody else has bothered with. That is why sessions 9 to 14 have no libraries in them.</p>
+</div>
+
+
+<!-- ══════════════════════════ NEXT ══════════════════════════ -->
+<h3 id="next">Before Friday</h3>
+
+<ol>
+  <li><strong>Finish the compute calculation</strong> from part 4 if you did not get to the end of it in class, and write the ratio down as a single number. You will be asked for it.</li>
+  <li><strong>Run one prompt on two different frontier models</strong> — the same prompt, word for word — and bring both answers. Something with a right answer is best: a factual question about Côte d'Ivoire, or a small piece of arithmetic. Where they diverge is the interesting part, and we will use several of these on Friday.</li>
+  <li><strong>Nothing to install.</strong> Friday is the first coding session and the environment is already set up from session 1. If your setup did not complete, come and see me before Friday rather than during it.</li>
+</ol>
+
+<div class="callout tip">
+  <div class="callout-icon">➡️</div>
+  <div class="callout-body">
+    <strong>Session 4 — Friday 18 September, 11:30</strong>
+    <p><em>Python I: values, functions, and the loop.</em> The first of six sessions on the tools. We start from the beginning — variables, a function that takes arguments and returns something, if/else, and the loop with an accumulator — and we stop there. If you have programmed before, the session will feel slow for twenty minutes and then it will not. If you have not, this is the session that decides the rest of your term, and it is built for you.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ REFS ══════════════════════════ -->
+<h3 id="refs">Sources for the figures quoted today</h3>
+
+<ul class="refs">
+  <li><strong>AlexNet</strong> — 15.3% vs 26.2% top-5 error, 60M parameters, two GTX 580 cards, 90 epochs over 1.2M images, 5–6 days training: Krizhevsky, Sutskever &amp; Hinton, "ImageNet Classification with Deep Convolutional Neural Networks", NeurIPS 2012.</li>
+  <li><strong>The Lighthill report</strong> — combinatorial explosion and the UK funding cuts: J. Lighthill, "Artificial Intelligence: A General Survey", British Science Research Council, 1973. A transcript of the televised debate that followed is at <a href="https://github.com/Dicklesworthstone/the_lighthill_debate_on_ai">github.com/Dicklesworthstone</a>.</li>
+  <li><strong>The ALPAC report</strong> — machine translation slower, less accurate and more expensive than human translation: Automatic Language Processing Advisory Committee, National Research Council, 1966.</li>
+  <li><strong>Backpropagation</strong> — Rumelhart, Hinton &amp; Williams, "Learning representations by back-propagating errors", <em>Nature</em> 323, 1986.</li>
+  <li><strong>LeNet and the cheque readers</strong> — commercial deployment from 1993, over 10% of US cheques by the late 1990s: LeCun, Bottou, Bengio &amp; Haffner, "Gradient-Based Learning Applied to Document Recognition", <em>Proc. IEEE</em>, 1998; see also <a href="https://en.wikipedia.org/wiki/LeNet">Wikipedia, "LeNet"</a>.</li>
+  <li><strong>XCON</strong> — 2,500 rules, ~$25M annual saving; growth to ~17,000 rules and 31,000 components by 1989: <a href="https://en.wikipedia.org/wiki/Xcon">Wikipedia, "Xcon"</a>; arXiv:cs/0312020.</li>
+  <li><strong>GTX 580 throughput</strong> — approximately 1.58 TFLOPS single precision, manufacturer specification. The 30% efficiency figure is our assumption, not a published number.</li>
+</ul>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 3 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

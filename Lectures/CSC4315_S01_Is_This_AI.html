@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 1 — Is This AI? The Two-Question Test</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #faf9f6; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fde68a;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 4px 24px rgba(15,14,23,0.08);
+    --card-shadow-hover: 0 12px 40px rgba(15,14,23,0.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  .hero { background: var(--ink); color: var(--paper); padding: 76px 40px 56px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 72% 28%, rgba(124,58,237,0.35) 0%, transparent 60%),
+                radial-gradient(ellipse at 18% 82%, rgba(13,148,136,0.3) 0%, transparent 55%),
+                radial-gradient(ellipse at 92% 92%, rgba(232,168,56,0.2) 0%, transparent 50%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: rgba(232,168,56,0.2); border: 1px solid var(--gold);
+    color: var(--gold-light); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { font-size: 1.12rem; color: rgba(250,249,246,0.78); max-width: 640px; margin-bottom: 32px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--paper); padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.1); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; }
+  .toc a { color: rgba(250,249,246,0.65); text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    padding: 14px 15px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  .module-header { margin: 56px 0 28px; padding: 30px 34px; border-radius: 16px; position: relative; overflow: hidden; }
+  .module-header.teal { background: var(--teal); }
+  .module-header.violet { background: var(--violet); }
+  .module-header.gold { background: #92400e; }
+  .module-header.sky { background: #075985; }
+  .module-header.ink { background: var(--ink); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', serif; font-size: 5rem;
+    font-weight: 900; color: rgba(255,255,255,0.12); line-height: 1; }
+  .module-header .mod-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .module-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+    color: #fff; line-height: 1.2; }
+  .module-header p { color: rgba(255,255,255,0.82); margin-top: 8px; font-size: 0.97rem; max-width: 620px; }
+
+  h3 { font-family: 'Playfair Display', serif; font-size: 1.32rem; font-weight: 700; margin: 38px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    box-shadow: var(--card-shadow); transition: box-shadow 0.25s, transform 0.25s; }
+  .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-3px); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 14px; box-shadow: var(--card-shadow); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--ink); color: var(--paper); }
+  thead th { padding: 13px 15px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 12px 15px; font-size: 0.88rem; vertical-align: top; }
+  tbody tr:hover { background: var(--cream); }
+
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip { background: var(--teal-light); border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3; border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light); border-left: 4px solid var(--sky); }
+  .callout.try { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light); border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body strong { display: block; margin-bottom: 4px; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  /* BIG IDEA — light background, dark text, per your note on readability */
+  .bigidea { background: var(--gold-light); border: 1px solid #d9a441; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 24px 28px; margin: 28px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.05rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+  .bigidea p + p { margin-top: 12px; }
+
+  .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 18px 0; box-shadow: var(--card-shadow); }
+  .code-header { background: #2a2a3d; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .code-header span { color: rgba(255,255,255,0.55); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal); color: #fff; font-size: 0.7rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; }
+  pre { padding: 20px 22px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; line-height: 1.65; color: #cdd6f4; }
+  .kw { color: #cba6f7; } .str { color: #a6e3a1; } .cm { color: #6c7086; font-style: italic; }
+  .fn { color: #89b4fa; } .num { color: #fab387; } .var { color: #f38ba8; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    margin: 24px 0; box-shadow: var(--card-shadow); overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  .step-list { list-style: none; margin: 16px 0; }
+  .step-list li { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; flex-shrink: 0; }
+  .step-text strong { display: block; margin-bottom: 3px; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.maybe { background: #fef9c3; color: #854d0e; }
+  .pill.new { background: var(--violet-light); color: #5b21b6; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 2px 6px; border-radius: 5px; }
+
+  /* quiz */
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px;
+    margin: 18px 0; box-shadow: var(--card-shadow); }
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 14px; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.35s ease, padding 0.35s ease; }
+  .reveal.open { max-height: 900px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .rbtn { background: var(--ink); color: var(--paper); border: none; border-radius: 100px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; }
+  .rbtn:hover { background: var(--teal); }
+
+  .verdict-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+
+  footer { background: var(--ink); color: rgba(250,249,246,0.55); text-align: center;
+    padding: 32px 20px; font-size: 0.85rem; margin-top: 60px; }
+  footer strong { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 48px 20px 40px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ════ light format (applied Sept 2026): overrides the dark theme above ════ */
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 1 · Tuesday 8 September 2026</div>
+    <h1>Is this AI?<br><em>The two-question test</em></h1>
+    <p class="lead">Almost everything sold as artificial intelligence today is one of three quite different machines. By the end of this session you will be able to tell them apart in under a minute — and you will know what you are going to build between now and December.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 0 · What AI is</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">No mathematics today</span>
+      <span class="tag">Setup lab + a 30-minute diagnostic</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#open">The quiz</a>
+  <a href="#trap">The obvious answer</a>
+  <a href="#test">Two questions</a>
+  <a href="#rework">Back to the quiz</a>
+  <a href="#boxes">Nested boxes</a>
+  <a href="#course">The course</a>
+  <a href="#setup">Setup lab</a>
+  <a href="#diag">Diagnostic</a>
+  <a href="#next">Before Friday</a>
+</div></nav>
+
+<div class="page">
+
+<!-- ══════════════════════════ OPENING ══════════════════════════ -->
+<div class="module-header ink" data-num="1" id="open">
+  <div class="mod-label">Part 1 · 15 minutes</div>
+  <h2>Six systems. Which of them are artificial intelligence?</h2>
+  <p>Answer for yourself before reading on. Write down yes or no for each. Do not look for a trick — answer the way you would answer a friend.</p>
+</div>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th style="width:34px">#</th><th>System</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><strong>A</strong></td><td>A thermostat</td><td>Turns the air conditioning on when the room passes 26 °C.</td></tr>
+    <tr><td><strong>B</strong></td><td>Deep Blue</td><td>Beat the world chess champion in 1997 by examining 200 million positions per second.</td></tr>
+    <tr><td><strong>C</strong></td><td>A spam filter</td><td>Learned from a million labelled emails which ones you would have deleted.</td></tr>
+    <tr><td><strong>D</strong></td><td>Google Maps routing</td><td>Finds the fastest road from Grand-Bassam to Abidjan through a graph of every street.</td></tr>
+    <tr><td><strong>E</strong></td><td>A pocket calculator</td><td>Computes a square root to twelve decimal places, instantly, every time.</td></tr>
+    <tr><td><strong>F</strong></td><td>ChatGPT</td><td>Writes an essay on the Ivorian cocoa trade that you would accept from a student.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="quiz">
+  <h5>How does a room usually answer?</h5>
+  <p class="q-sub">Aggregated across several dozen audiences, before any discussion.</p>
+  <button class="rbtn" onclick="tog('r1')">Show the typical answers</button>
+  <div class="reveal" id="r1">
+    <p><strong>Almost everyone says yes to F</strong> and no to A and E. <strong>Most say yes to B and C.</strong> <strong>D splits the room roughly in half</strong> — and that split is the interesting part of this whole session.</p>
+    <p>Now hold on to your own answers. We are going to come back and change some of them, on purpose, with a reason.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ THE TRAP ══════════════════════════ -->
+<div class="module-header violet" data-num="2" id="trap">
+  <div class="mod-label">Part 2 · 15 minutes</div>
+  <h2>The answer that sounds right and is not</h2>
+  <p>There is a tempting one-line definition of AI. It is popular, it is repeated in textbooks, and it falls apart on the second example you throw at it.</p>
+</div>
+
+<h3>The tempting definition</h3>
+
+<p>Ask most people to define artificial intelligence and, after some hedging, you get something close to this:</p>
+
+<div class="bigidea">
+  <div class="bi-label">The definition we are about to reject</div>
+  <p>“It is AI if a human did not write the rules — if the machine worked them out for itself.”</p>
+</div>
+
+<p>It is an attractive test. It is crisp, it is easy to apply, and it correctly rejects the thermostat and the calculator. A human wrote <em>if temperature &gt; 26 then switch on</em>; a human wrote the square-root algorithm. Neither machine worked anything out. Good so far.</p>
+
+<p>Now apply it to Deep Blue.</p>
+
+<p>Every rule inside Deep Blue was written by a human being. The rules of chess, hand-coded. The evaluation function that scored a position — material, king safety, pawn structure — hand-tuned by grandmasters. The search procedure, hand-written. Deep Blue learned nothing. It did not improve between games. Switch it off and on and it is exactly the machine it was before.</p>
+
+<p>So by the tempting definition, Deep Blue is <strong>not</strong> artificial intelligence. And yet it did the thing that, for forty years, everyone had agreed would be the proof that machines could think: it beat Garry Kasparov.</p>
+
+<div class="callout stop">
+  <div class="callout-icon">🛑</div>
+  <div class="callout-body">
+    <strong>Where the definition breaks</strong>
+    <p>“Did a human write the rules?” is not a definition of artificial intelligence. It is a definition of <em>machine learning</em> — which is one branch of AI, not the whole of it. Treating the two as the same thing quietly deletes forty years of the field, and it will make the rest of this course incoherent.</p>
+  </div>
+</div>
+
+<p>This is worth stating plainly because it is the single most common confusion in the room, including among people who work with these systems every day. In 2026 the words <em>AI</em> and <em>machine learning</em> are used interchangeably in press releases, job adverts and, frequently, in conference talks. They are not the same, and you will spend the rest of this semester on the difference.</p>
+
+<!-- ══════════════════════════ THE TEST ══════════════════════════ -->
+<div class="module-header teal" data-num="3" id="test">
+  <div class="mod-label">Part 3 · 20 minutes</div>
+  <h2>Two questions, asked in order</h2>
+  <p>One question was never going to be enough. Two, asked in the right sequence, will carry you through the entire field.</p>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">The test — use this for the rest of the semester</div>
+  <p><strong>Question 1 — Does the task require intelligence at all?</strong><br>
+  If a human doing this task would be said to be thinking — perceiving, reasoning, planning, judging, using language — then the task is a candidate. If a human doing it would just be following a fixed procedure, it is not.</p>
+  <p><strong>Question 2 — Where did the rules come from?</strong><br>
+  Only ask this if question 1 came back yes. Did a person write the rules down, or did the machine extract them from data? This does not decide whether it is AI. It decides <em>what kind</em>.</p>
+</div>
+
+<p>The order matters. Question 1 is the gate: it separates artificial intelligence from ordinary computation. Question 2 is the classifier: it tells you which of three families you are looking at, and therefore what you should expect from the system, how it fails, and what it would take to improve it.</p>
+
+<h3>Question 1, applied</h3>
+
+<p>A thermostat compares two numbers. A human doing that is not thinking, they are comparing two numbers. <span class="pill no">Not AI</span> — and notice we never had to ask who wrote the rule.</p>
+
+<p>A calculator executes an algorithm that is exact, known, and finite. A human doing long division is not exercising judgement. <span class="pill no">Not AI</span></p>
+
+<p>Playing chess well, recognising which email is unwanted, finding a good route through a city you do not know, writing coherent prose about the cocoa trade — a human doing any of these would be described as thinking. <span class="pill yes">All four pass question 1</span></p>
+
+<div class="callout warn">
+  <div class="callout-icon">⚖️</div>
+  <div class="callout-body">
+    <strong>Question 1 is a judgement call, and that is acceptable</strong>
+    <p>There is no bright line, and philosophers have argued about it for seventy years. You will meet genuinely borderline cases — is optical character recognition intelligence, or is it pattern matching that stopped being impressive? The test is still useful. A test that gives you a clear answer on ninety per cent of cases and an honest argument on the rest is worth far more than a crisp rule that gives you confidently wrong answers.</p>
+  </div>
+</div>
+
+<h3>Question 2, applied — the three paradigms</h3>
+
+<p>Of the systems that passed question 1, ask where the rules came from. You get three distinct families. We will spend all of session 2 on these; today, just meet them.</p>
+
+<div class="diagram-wrap">
+<div class="diagram-title">Three paradigms — the same field, three different machines</div>
+<svg viewBox="0 0 840 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  <!-- rules-based -->
+  <rect x="20" y="30" width="240" height="230" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="140" y="62" text-anchor="middle" font-family="DM Sans" font-size="15" font-weight="700" fill="#5b21b6">RULES-BASED</text>
+  <text x="140" y="84" text-anchor="middle" font-family="DM Sans" font-size="12" fill="#6d28d9">A human wrote the rules</text>
+  <circle cx="60" cy="128" r="16" fill="#7c3aed"/>
+  <text x="60" y="133" text-anchor="middle" font-family="DM Sans" font-size="14" fill="#fff">👤</text>
+  <path d="M82 128 H 118" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#av)"/>
+  <rect x="122" y="110" width="112" height="36" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="178" y="133" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#5b21b6">IF ... THEN ...</text>
+  <text x="140" y="186" text-anchor="middle" font-family="DM Sans" font-size="12.5" font-weight="600" fill="#3f2d5c">Expert systems</text>
+  <text x="140" y="206" text-anchor="middle" font-family="DM Sans" font-size="11.5" fill="#6b5b8a">Medical diagnosis, 1980s</text>
+  <text x="140" y="234" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6b5b8a">Transparent · brittle · caps out</text>
+  <text x="140" y="250" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#6b5b8a">at what the expert could say</text>
+
+  <!-- search-based -->
+  <rect x="300" y="30" width="240" height="230" rx="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="420" y="62" text-anchor="middle" font-family="DM Sans" font-size="15" font-weight="700" fill="#075985">SEARCH-BASED</text>
+  <text x="420" y="84" text-anchor="middle" font-family="DM Sans" font-size="12" fill="#0369a1">A human wrote the goal</text>
+  <circle cx="420" cy="110" r="9" fill="#0284c7"/>
+  <line x1="420" y1="119" x2="382" y2="140" stroke="#0284c7" stroke-width="1.8"/>
+  <line x1="420" y1="119" x2="458" y2="140" stroke="#0284c7" stroke-width="1.8"/>
+  <circle cx="382" cy="146" r="8" fill="#38bdf8"/>
+  <circle cx="458" cy="146" r="8" fill="#38bdf8"/>
+  <line x1="382" y1="154" x2="362" y2="172" stroke="#0284c7" stroke-width="1.5"/>
+  <line x1="382" y1="154" x2="402" y2="172" stroke="#0284c7" stroke-width="1.5"/>
+  <line x1="458" y1="154" x2="438" y2="172" stroke="#0284c7" stroke-width="1.5"/>
+  <line x1="458" y1="154" x2="478" y2="172" stroke="#0284c7" stroke-width="1.5"/>
+  <circle cx="362" cy="178" r="6.5" fill="#7dd3fc"/>
+  <circle cx="402" cy="178" r="6.5" fill="#7dd3fc"/>
+  <circle cx="438" cy="178" r="6.5" fill="#7dd3fc"/>
+  <circle cx="478" cy="178" r="6.5" fill="#0c4a6e"/>
+  <text x="420" y="212" text-anchor="middle" font-family="DM Sans" font-size="12.5" font-weight="600" fill="#0c4a6e">Deep Blue · route finding</text>
+  <text x="420" y="234" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#0369a1">Explores possibilities faster</text>
+  <text x="420" y="250" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#0369a1">than any human could</text>
+
+  <!-- learning-based -->
+  <rect x="580" y="30" width="240" height="230" rx="14" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+  <text x="700" y="62" text-anchor="middle" font-family="DM Sans" font-size="15" font-weight="700" fill="#115e59">LEARNING-BASED</text>
+  <text x="700" y="84" text-anchor="middle" font-family="DM Sans" font-size="12" fill="#0f766e">The machine found the rules</text>
+  <rect x="604" y="108" width="42" height="40" rx="6" fill="#fff" stroke="#0d9488" stroke-width="1.5"/>
+  <text x="625" y="133" text-anchor="middle" font-family="DM Sans" font-size="14">📊</text>
+  <path d="M652 128 H 686" stroke="#0d9488" stroke-width="2.5" marker-end="url(#at)"/>
+  <rect x="690" y="106" width="106" height="44" rx="8" fill="#0d9488"/>
+  <text x="743" y="126" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#fff">weights</text>
+  <text x="743" y="141" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#99f6e4">adjusted by data</text>
+  <text x="700" y="186" text-anchor="middle" font-family="DM Sans" font-size="12.5" font-weight="600" fill="#115e59">Spam filter · ChatGPT</text>
+  <text x="700" y="206" text-anchor="middle" font-family="DM Sans" font-size="11.5" fill="#0f766e">Everything since 2012</text>
+  <text x="700" y="234" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#0f766e">Powerful · opaque · needs</text>
+  <text x="700" y="250" text-anchor="middle" font-family="DM Sans" font-size="11" fill="#0f766e">enormous amounts of data</text>
+
+  <defs>
+    <marker id="av" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="#7c3aed"/></marker>
+    <marker id="at" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="#0d9488"/></marker>
+  </defs>
+</svg>
+</div>
+
+<p>All three are artificial intelligence. All three pass question 1. They differ only in the answer to question 2 — and that difference determines everything practical about them.</p>
+
+<!-- ══════════════════════════ REWORK ══════════════════════════ -->
+<div class="module-header sky" data-num="4" id="rework">
+  <div class="mod-label">Part 4 · 15 minutes</div>
+  <h2>Back to the six systems</h2>
+  <p>Now with the test in hand. Compare these against the answers you wrote at the start.</p>
+</div>
+
+<div class="quiz">
+  <div class="verdict-row"><span class="pill no">Not AI</span></div>
+  <h5>A · The thermostat &nbsp;&nbsp;·&nbsp;&nbsp; E · The calculator</h5>
+  <p class="q-sub">Both fail at question 1.</p>
+  <button class="rbtn" onclick="tog('r2')">Reasoning</button>
+  <div class="reveal" id="r2">
+    <p>Comparing two numbers is not thinking; computing a square root by a known exact algorithm is not thinking. We never reach question 2, and it is worth noticing that we did not need to — asking "did a human write the rule?" first would have given the right answer here for entirely the wrong reason.</p>
+    <p>A caveat you should be able to make yourself: a modern learning thermostat, which builds a model of when you are home and what you like, <em>does</em> pass question 1. The device on the wall in 1970 does not. Same word, different machine.</p>
+  </div>
+</div>
+
+<div class="quiz">
+  <div class="verdict-row"><span class="pill yes">AI</span><span class="pill maybe">Search-based</span></div>
+  <h5>B · Deep Blue &nbsp;&nbsp;·&nbsp;&nbsp; D · Google Maps routing</h5>
+  <p class="q-sub">Pass question 1. On question 2: humans wrote every rule.</p>
+  <button class="rbtn" onclick="tog('r3')">Reasoning</button>
+  <div class="reveal" id="r3">
+    <p>These two are the same machine wearing different clothes, and this is why D split the room. Both take a problem with an astronomical number of possible answers, and both search it far faster and far deeper than a person could — Deep Blue through chess positions, Maps through street networks. Neither learned anything. Both are unambiguously AI, and search is one of the oldest and most successful branches of the field.</p>
+    <p>If you said yes to Deep Blue and no to Google Maps, you were not being inconsistent — you were responding to how <em>impressive</em> each one feels. That instinct is worth naming, because it is the source of a long-running joke in this field: as soon as something works reliably, people stop calling it AI. Routing, spell-check, optical character recognition and speech transcription were all once flagship AI results. Now they are just software.</p>
+  </div>
+</div>
+
+<div class="quiz">
+  <div class="verdict-row"><span class="pill yes">AI</span><span class="pill new">Learning-based</span></div>
+  <h5>C · The spam filter &nbsp;&nbsp;·&nbsp;&nbsp; F · ChatGPT</h5>
+  <p class="q-sub">Pass question 1. On question 2: the machine extracted the rules from data.</p>
+  <button class="rbtn" onclick="tog('r4')">Reasoning</button>
+  <div class="reveal" id="r4">
+    <p>Nobody wrote a rule saying that the word "lottery" plus an unfamiliar sender plus five exclamation marks means spam. The filter found that pattern in a million labelled examples. Nobody wrote a rule about the cocoa trade either. The scale differs by a factor of a billion; the principle is identical.</p>
+    <p>This third family is what the rest of CSC 4315 is about — not because the other two are unimportant, but because this is the one you can build from scratch in a semester, and the one that has changed since 2012.</p>
+  </div>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">The point of the whole exercise</div>
+  <p>The six systems sort into three groups, not two. Anyone who tells you that AI means "the machine learned it" has handed you a test that classifies Deep Blue, Google Maps and every expert system as not-AI — which is a strange thing to say about the programs that carried the field for its first forty years.</p>
+</div>
+
+<!-- ══════════════════════════ BOXES ══════════════════════════ -->
+<h3 id="boxes">Not synonyms — nested boxes</h3>
+
+<p>One more piece of vocabulary before we finish, because these five words are used interchangeably in the press and they are not interchangeable at all.</p>
+
+<div class="diagram-wrap">
+<div class="diagram-title">Each term sits inside the one before it</div>
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  <rect x="15" y="18" width="730" height="296" rx="16" fill="#f8fafc" stroke="#0f0e17" stroke-width="2.5"/>
+  <text x="34" y="46" font-family="DM Sans" font-size="15" font-weight="700" fill="#0f0e17">ARTIFICIAL INTELLIGENCE</text>
+  <text x="34" y="66" font-family="DM Sans" font-size="11.5" fill="#475569">any machine doing something we would call thinking · rules, search or learning</text>
+
+  <rect x="45" y="80" width="670" height="220" rx="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="64" y="107" font-family="DM Sans" font-size="14" font-weight="700" fill="#075985">MACHINE LEARNING</text>
+  <text x="64" y="126" font-family="DM Sans" font-size="11.5" fill="#0369a1">the subset where the rules come from data, not from a person</text>
+
+  <rect x="75" y="140" width="610" height="148" rx="12" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+  <text x="94" y="167" font-family="DM Sans" font-size="14" font-weight="700" fill="#115e59">DEEP LEARNING</text>
+  <text x="94" y="186" font-family="DM Sans" font-size="11.5" fill="#0f766e">machine learning using many-layered neural networks · the 2012 renaissance</text>
+
+  <rect x="105" y="200" width="550" height="76" rx="10" fill="#fde68a" stroke="#b45309" stroke-width="2"/>
+  <text x="124" y="227" font-family="DM Sans" font-size="13.5" font-weight="700" fill="#78350f">LARGE LANGUAGE MODELS</text>
+  <text x="124" y="246" font-family="DM Sans" font-size="11.5" fill="#92400e">deep learning applied to text at enormous scale · GPT, Claude, Gemini, Llama</text>
+  <text x="124" y="265" font-family="DM Sans" font-size="11" fill="#92400e" font-style="italic">an AGENT is an LLM given tools and a loop — a shape, not a layer</text>
+</svg>
+</div>
+
+<p>Read it outward and each sentence is true: every large language model is deep learning, all deep learning is machine learning, all machine learning is AI. Read it inward and every sentence is false. Deep Blue lives in the outermost box only. Your spam filter lives in the second box but not the third.</p>
+
+<!-- ══════════════════════════ COURSE ══════════════════════════ -->
+<div class="module-header gold" data-num="5" id="course">
+  <div class="mod-label">Part 5 · 10 minutes</div>
+  <h2>What you will build between now and December</h2>
+  <p>This course has an unusual rule, and it is the reason it is organised the way it is.</p>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">The rule of this course</div>
+  <p>You will not call a library function until you have written the thing it replaces.</p>
+  <p>By session 14 you will have built a neural network in NumPy — the forward pass by hand on paper, then in code; the gradients derived on the board, then coded, then verified numerically. Only in session 17 will you be allowed to write <code>model.fit()</code>. When you do, you will be able to name every line of your own code that the call replaced.</p>
+</div>
+
+<ul class="step-list">
+  <li><div class="step-num">1</div><div class="step-text"><strong>Sessions 1–3 · What AI is</strong>
+    <p>Today's test, the three paradigms, eighty years of history including two collapses, and an honest account of where the field actually stands in 2026.</p></div></li>
+  <li><div class="step-num">2</div><div class="step-text"><strong>Sessions 4–9 · The tools you need and nothing more</strong>
+    <p>Two sessions of Python, two of NumPy, the small amount of linear algebra a network actually uses, and gradient descent worked out with pencil and paper before any code. Six sessions, deliberately unhurried.</p></div></li>
+  <li><div class="step-num">3</div><div class="step-text"><strong>Sessions 10–14 · A neural network from nothing</strong>
+    <p>No libraries. Least squares, one neuron, the XOR wall, a forward pass you compute by hand, and backpropagation you derive yourself. The heart of the course.</p></div></li>
+  <li><div class="step-num">4</div><div class="step-text"><strong>Sessions 16–19 · What the libraries were doing all along</strong>
+    <p>Your two hundred lines become four, in scikit-learn, PyTorch and Keras, shown side by side against your own code.</p></div></li>
+  <li><div class="step-num">5</div><div class="step-text"><strong>Sessions 20–23 · Data that fights back</strong>
+    <p>Missing values, leakage, class imbalance, overfitting, and images at a scale where the tricks matter.</p></div></li>
+  <li><div class="step-num">6</div><div class="step-text"><strong>Sessions 24–26 · Language, and a model you adapt</strong>
+    <p>Tokens, embeddings, attention computed by hand on three words — and then a small language model, already trained, that you fine-tune on a corpus of your choosing and watch change voice.</p></div></li>
+  <li><div class="step-num">7</div><div class="step-text"><strong>Sessions 27–28 · Getting real work out of frontier models</strong>
+    <p>Prompting as an engineering discipline, then agents, tools and retrieval. Placed at the end deliberately: this material reads completely differently once you have taken a model apart yourself and put one back to work.</p></div></li>
+</ul>
+
+<div class="callout info">
+  <div class="callout-icon">📅</div>
+  <div class="callout-body">
+    <strong>Dates</strong>
+    <p>Thirty sessions, Tuesdays 16:00–17:20 and Fridays 11:30–12:50, from 8 September to 18 December 2026. <strong>Midterm: Tuesday 27 October</strong>, covering sessions 1–14. <strong>Final: Friday 18 December.</strong></p>
+  </div>
+</div>
+
+<div class="callout try">
+  <div class="callout-icon">🤖</div>
+  <div class="callout-body">
+    <strong>On using ChatGPT, Claude or Gemini for your lab work</strong>
+    <p>You may, from session 4 onward, under one condition: <strong>you must be able to explain every line you submit.</strong> I will ask. A student who uses a frontier model to learn faster is doing exactly what a working engineer does in 2026; a student who uses one to avoid understanding will discover the problem at the midterm, where there is no laptop. Session 27 turns this into a formal skill.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ SETUP ══════════════════════════ -->
+<div class="module-header teal" data-num="6" id="setup">
+  <div class="mod-label">Part 6 · 20 minutes · in class</div>
+  <h2>Setup: get your machine ready</h2>
+  <p>Everything in this course runs on a modest laptop. Do this now, in the room, so that problems surface while I am standing here.</p>
+</div>
+
+<ul class="step-list">
+  <li><div class="step-num">1</div><div class="step-text"><strong>Install Miniconda</strong>
+    <p>From <code>docs.conda.io</code>. Accept the defaults. On Windows, use the Anaconda Prompt for everything below, not PowerShell.</p></div></li>
+  <li><div class="step-num">2</div><div class="step-text"><strong>Create the course environment</strong>
+    <p>One environment for the whole semester, so that everyone's results are reproducible and my debugging advice applies to your machine.</p></div></li>
+  <li><div class="step-num">3</div><div class="step-text"><strong>Verify it</strong>
+    <p>Run the check script below. If it prints four version numbers and a green tick, you are done for today.</p></div></li>
+  <li><div class="step-num">4</div><div class="step-text"><strong>Join the GitHub Classroom</strong>
+    <p>Accept the invitation link. Labs are submitted there — never by email.</p></div></li>
+</ul>
+
+<div class="code-block">
+  <div class="code-header"><span>Anaconda Prompt (Windows) or Terminal (macOS / Linux)</span><span class="code-lang">shell</span></div>
+<pre><span class="cm"># one environment for the whole semester</span>
+conda create <span class="var">-n</span> csc4315 python=<span class="num">3.11</span> <span class="var">-y</span>
+conda activate csc4315
+
+<span class="cm"># everything we need through session 22</span>
+pip install numpy matplotlib scikit-learn jupyterlab pandas
+
+<span class="cm"># PyTorch arrives in session 18 — install it now while you have wifi</span>
+pip install torch <span class="var">--index-url</span> https://download.pytorch.org/whl/cpu
+
+<span class="cm"># launch the notebook server</span>
+jupyter lab</pre>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>check_setup.py — run this in a notebook cell</span><span class="code-lang">python</span></div>
+<pre><span class="kw">import</span> sys, numpy <span class="kw">as</span> np, matplotlib, sklearn
+
+<span class="fn">print</span>(<span class="str">"python      "</span>, sys.version.split()[<span class="num">0</span>])
+<span class="fn">print</span>(<span class="str">"numpy       "</span>, np.__version__)
+<span class="fn">print</span>(<span class="str">"matplotlib  "</span>, matplotlib.__version__)
+<span class="fn">print</span>(<span class="str">"scikit-learn"</span>, sklearn.__version__)
+
+<span class="cm"># the one line of real work: a 2x3 layer, which is session 7's whole lesson</span>
+X = np.<span class="fn">array</span>([[<span class="num">1.0</span>, <span class="num">2.0</span>]])          <span class="cm"># one example, two features</span>
+W = np.<span class="fn">array</span>([[<span class="num">0.5</span>, <span class="num">-1.0</span>, <span class="num">2.0</span>],
+              [<span class="num">1.5</span>,  <span class="num">0.0</span>, <span class="num">-0.5</span>]])   <span class="cm"># 2 inputs -> 3 hidden units</span>
+b = np.<span class="fn">array</span>([<span class="num">0.1</span>, <span class="num">0.1</span>, <span class="num">0.1</span>])
+
+out = X @ W + b
+<span class="fn">print</span>(<span class="str">"\nlayer output"</span>, out)
+<span class="kw">assert</span> np.<span class="fn">allclose</span>(out, [[<span class="num">3.6</span>, <span class="num">-0.9</span>, <span class="num">1.1</span>]]), <span class="str">"something is wrong"</span>
+<span class="fn">print</span>(<span class="str">"✅ setup verified"</span>)</pre>
+</div>
+
+<div class="callout tip">
+  <div class="callout-icon">🔍</div>
+  <div class="callout-body">
+    <strong>You just ran a neural network layer</strong>
+    <p>Those three lines are not a toy. <code>X @ W + b</code> is exactly what happens inside every layer of every network in this course, including the language model you will fine-tune in session 26. Session 7 is devoted to why. For now, notice that you can check the first number by hand: 1.0 × 0.5 + 2.0 × 1.5 + 0.1 = 3.6.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ DIAGNOSTIC ══════════════════════════ -->
+<div class="module-header violet" data-num="7" id="diag">
+  <div class="mod-label">Part 7 · 30 minutes · in class</div>
+  <h2>A page of code, and it counts for nothing</h2>
+</div>
+
+<p>The last thirty minutes are a written exercise. Read this paragraph before you start it, because how you read it decides whether it is any use to me.</p>
+
+<div class="callout stop">
+  <div class="callout-icon">🛑</div>
+  <div class="callout-body">
+    <strong>Not graded. Not for marks, not for participation, not at all.</strong>
+    <p>I am not measuring you. I am measuring the class, so that sessions 4 to 9 get built for the people actually in this room rather than for the students the syllabus imagined. A blank page from someone who has never programmed is a useful answer and I need it. A copied page is worse than useless, because it makes me build the wrong course.</p>
+  </div>
+</div>
+
+<h3>How to answer it</h3>
+<div class="step-list">
+  <div class="step-num">1</div><div class="step-text"><strong>Any language.</strong> Python, Java, C, or plain pseudocode. I am reading for whether the idea is right, not whether the semicolons are.</div>
+  <div class="step-num">2</div><div class="step-text"><strong>On paper.</strong> Closed book, no phones, no laptop — not for integrity, but because an assisted answer tells me nothing about what to teach.</div>
+  <div class="step-num">3</div><div class="step-text"><strong>Write &ldquo;not yet&rdquo; and move on</strong> if you cannot do a question. That is a real answer rather than a failure, and it is the one I most need to count accurately.</div>
+  <div class="step-num">4</div><div class="step-text"><strong>Put your name on it.</strong> The names are how I pair you sensibly in labs and find the three or four people I should speak to individually this week.</div>
+</div>
+
+<h3>What is on it</h3>
+<p>Four short parts. A page about your background; three fragments of code to read and say what they print; three small functions to write; and one broken function with three bugs in it to find. There is an optional last page for anyone who already knows NumPy — blank is expected there and costs nothing.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">✅</div>
+  <div class="callout-body">
+    <strong>You will hear the result on Friday</strong>
+    <p>In session 2 I will spend ninety seconds on how the class distributed and what I changed because of it. Two things to hold on to until then. Unit 1 is <strong>six sessions</strong> of Python and NumPy — nearly a fifth of the course — precisely because arriving without programming is expected here rather than penalised. And <strong>no lab is a prerequisite for the next lecture</strong>: every session starts from a state the whole room shares, so a week where you fall behind never compounds into the next one.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ NEXT ══════════════════════════ -->
+<h3 id="next">Before Friday</h3>
+
+<ol>
+  <li><strong>Finish the setup</strong> if it did not complete in class. Bring me the error message, not a description of it.</li>
+  <li><strong>Write down one system you use weekly</strong> — an app, a website, a device — and classify it with the two-question test. Bring a one-paragraph justification. We will argue about several of them on Friday, and the disagreements are the useful part.</li>
+  <li><strong>Optional, ten minutes:</strong> ask a frontier model "is Google Maps routing artificial intelligence?" and see whether its answer survives today's test. Bring what it said.</li>
+</ol>
+
+<div class="callout info">
+  <div class="callout-icon">➡️</div>
+  <div class="callout-body">
+    <strong>Session 2 — Friday 11 September, 11:30</strong>
+    <p>Three paradigms in depth: what an expert system actually looked like, why Deep Blue's search was a triumph and a dead end at the same time, and what changed when the third paradigm finally worked.</p>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 1 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

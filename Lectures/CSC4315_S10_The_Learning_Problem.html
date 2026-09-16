@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 10 — The learning problem, and a line learned by descent</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 10 · Friday 09 October 2026</div>
+    <h1>The learning problem,<br><em>and a line learned by descent</em></h1>
+    <p class="lead">Unit 1 gave you a way to walk downhill. Today we decide what the hill is. Six points, one straight line through them — first solved exactly with a formula, then thrown away and found again by descending, because only the second method survives contact with a neural network.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 2 · From scratch</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 7 · exact fit, then descent</span>
+      <span class="tag">No libraries beyond NumPy</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#words">Five words</a>
+  <a href="#exact">The exact fit</a>
+  <a href="#surface">The loss surface</a>
+  <a href="#descent">By descent</a>
+  <a href="#lab">Lab 7</a>
+  <a href="#next">Before Tuesday</a>
+</div></nav>
+
+<div class="page">
+
+<div class="module-header ink" data-num="1" id="words">
+  <div class="mod-label">Part 1 · 15 minutes</div>
+  <h2>Five words that define every learning problem</h2>
+  <p>Feature, label, model, parameter, loss. Everything this term is built out of these.</p>
+</div>
+<p>On Tuesday you minimised <em>f(x) = x²</em>. Nobody hands you that function in practice. What you have instead is data — examples of inputs and the outputs that go with them — and a family of functions you are willing to try. <strong>Learning is the act of choosing, from that family, the member that fits the data best.</strong> Five words make that sentence precise.</p>
+<div class="tool-table-wrap"><table><thead><tr><th>Word</th><th>Meaning</th><th>In today's example</th></tr></thead><tbody><tr><td><strong>Feature</strong> <em>x</em></td><td>what you know about an example</td><td>hours of revision a student did (0 to 5)</td></tr><tr><td><strong>Label</strong> <em>y</em></td><td>what you want to predict</td><td>the mark they received, out of 12</td></tr><tr><td><strong>Model</strong></td><td>a family of functions, with dials</td><td><em>ŷ = wx + b</em> — every straight line</td></tr><tr><td><strong>Parameters</strong></td><td>the dials the data will set</td><td><em>w</em> (slope) and <em>b</em> (intercept)</td></tr><tr><td><strong>Loss</strong></td><td>one number saying how wrong a choice of dials is</td><td>mean squared error over the six points</td></tr></tbody></table></div>
+<div class="bigidea"><div class="bi-label">The sentence to carry through unit 2</div><p>A model has parameters. A loss scores any setting of the parameters against the data. <strong>Training is gradient descent on the loss</strong> — the same walk you did on Tuesday, except the ground is now made of data.</p></div>
+
+<h3>Training data and test data</h3>
+<p>A model that fits the data it was trained on has proved very little: a lookup table does that perfectly. What we care about is the <em>next</em> student, the one whose mark we have not seen. So before any fitting, we set some examples aside and do not touch them until the end. The examples used to choose the parameters are the <strong>training set</strong>; the ones held back to measure honestly are the <strong>test set</strong>.</p>
+<div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>This is a promise, not a formality</strong><p>The moment test data influences a single decision — a learning rate, a feature, a stopping point — it stops being a test. Session 20 shows what that does to a score, by committing the mistake on purpose. Today, with six points, we keep all six for training; the idea matters more than the split.</p></div></div>
+
+<div class="module-header teal" data-num="2" id="exact">
+  <div class="mod-label">Part 2 · 15 minutes</div>
+  <h2>Six points, fitted exactly</h2>
+  <p>Least squares has a closed form. We use it once, so you have seen a fitted model before you see an iterative one.</p>
+</div>
+<div class="code-block"><div class="code-header"><span>the six points — the same six as Lab 7</span><span class="code-lang">python</span></div>
+<pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+x = np.<span class="fn">array</span>([<span class="num">0.</span>, <span class="num">1.</span>, <span class="num">2.</span>, <span class="num">3.</span>, <span class="num">4.</span>, <span class="num">5.</span>])            <span class="cm"># hours of revision</span>
+y = np.<span class="fn">array</span>([<span class="num">1.0</span>, <span class="num">2.9</span>, <span class="num">5.2</span>, <span class="num">6.8</span>, <span class="num">9.1</span>, <span class="num">11.2</span>])     <span class="cm"># mark out of 12</span></pre>
+</div>
+<div class="diagram-wrap"><div class="diagram-title">Least squares chooses the line that makes the red gaps, squared and averaged, as small as possible</div>
+<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto"><defs><marker id="ah" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#475569"/></marker></defs><circle cx="70" cy="232.0" r="6" fill="#0284c7" stroke="#0284c7" stroke-width="1.5"/><circle cx="170" cy="197.8" r="6" fill="#0284c7" stroke="#0284c7" stroke-width="1.5"/><circle cx="270" cy="156.39999999999998" r="6" fill="#0284c7" stroke="#0284c7" stroke-width="1.5"/><circle cx="370" cy="127.60000000000001" r="6" fill="#0284c7" stroke="#0284c7" stroke-width="1.5"/><circle cx="470" cy="86.20000000000002" r="6" fill="#0284c7" stroke="#0284c7" stroke-width="1.5"/><circle cx="570" cy="48.400000000000006" r="6" fill="#0284c7" stroke="#0284c7" stroke-width="1.5"/><line x1="70" y1="250" x2="620" y2="250" stroke="#94a3b8" stroke-width="1.5"/><line x1="70" y1="20" x2="70" y2="250" stroke="#94a3b8" stroke-width="1.5"/><line x1="70" y1="232.9432" x2="600" y2="38.87098000000003" stroke="#7c3aed" stroke-width="2.5"/><line x1="70" y1="232.0" x2="70" y2="232.9432" stroke="#e11d48" stroke-width="2" stroke-dasharray="4,3"/><line x1="170" y1="197.8" x2="170" y2="196.32580000000002" stroke="#e11d48" stroke-width="2" stroke-dasharray="4,3"/><line x1="270" y1="156.39999999999998" x2="270" y2="159.7084" stroke="#e11d48" stroke-width="2" stroke-dasharray="4,3"/><line x1="370" y1="127.60000000000001" x2="370" y2="123.09100000000001" stroke="#e11d48" stroke-width="2" stroke-dasharray="4,3"/><line x1="470" y1="86.20000000000002" x2="470" y2="86.4736" stroke="#e11d48" stroke-width="2" stroke-dasharray="4,3"/><line x1="570" y1="48.400000000000006" x2="570" y2="49.8562" stroke="#e11d48" stroke-width="2" stroke-dasharray="4,3"/><text x="640" y="40" font-size="14" fill="#6d28d9" text-anchor="end" font-weight="600" font-family="JetBrains Mono, monospace" >ŷ = 2.034x + 0.948</text><text x="345" y="285" font-size="13" fill="#475569" text-anchor="middle" font-weight="400" >hours of revision  x</text><text x="610" y="225" font-size="12" fill="#9f1239" text-anchor="end" font-weight="400" >red: the errors that get squared</text></svg>
+</div>
+<div class="bigidea"><div class="bi-label">Mean squared error — the loss for today</div><p class="eq">L(w, b) = mean( (w·x + b − y)² )</p><p>Square each gap so that errors above and below the line cannot cancel, and so that a large miss costs much more than a small one. Average them so the number does not grow just because there are more points.</p></div>
+<p>For a straight line, calculus gives the minimum in closed form. With <em>x̄</em> and <em>ȳ</em> the means, the slope is the covariance of <em>x</em> and <em>y</em> divided by the variance of <em>x</em>, and the line passes through the point of means:</p>
+<div class="code-block"><div class="code-header"><span>the exact answer</span><span class="code-lang">python</span></div>
+<pre>xm, ym = x.<span class="fn">mean</span>(), y.<span class="fn">mean</span>()
+w = np.<span class="fn">sum</span>((x - xm) * (y - ym)) / np.<span class="fn">sum</span>((x - xm) ** <span class="num">2</span>)
+b = ym - w * xm
+<span class="fn">print</span>(<span class="fn">round</span>(w, <span class="num">4</span>), <span class="fn">round</span>(b, <span class="num">4</span>), <span class="fn">round</span>(np.<span class="fn">mean</span>((w * x + b - y) ** <span class="num">2</span>), <span class="num">4</span>))</pre>
+</div>
+<div class="code-block"><div class="code-header"><span>output</span><span class="code-lang shell">output</span></div>
+<pre>2.0343 0.9476 0.0188</pre>
+</div>
+<p>Read the last number carefully. The best possible line still has a loss of <strong>0.0188</strong>, not zero. Real measurements are noisy; no line passes through all six. <em>A loss that cannot reach zero is normal, and chasing zero is how models learn noise</em> — that sentence returns as the whole of session 22.</p>
+
+<div class="module-header violet" data-num="3" id="surface">
+  <div class="mod-label">Part 3 · 12 minutes</div>
+  <h2>The loss is a surface, and we are standing on it</h2>
+  <p>Two parameters means the hill from Tuesday has become a bowl.</p>
+</div>
+<p>Pick any <em>w</em> and <em>b</em> and you get a number: the loss. At <em>w</em> = 0, <em>b</em> = 0 — the flat line through the origin — the loss is <strong>48.49</strong>. At <em>w</em> = 2, <em>b</em> = 1, a good guess by eye, it is <strong>0.0233</strong>. At the exact answer it is <strong>0.0188</strong>. Every pair of dials is a point on a surface; the exact answer is the bottom of the bowl.</p>
+<div class="tool-table-wrap"><table><thead><tr><th class="num">w</th><th class="num">b</th><th class="num">Loss</th><th>What it looks like</th></tr></thead><tbody><tr><td class="num">0</td><td class="num">0</td><td class="num">48.49</td><td>flat line along the axis — terrible</td></tr><tr><td class="num">2</td><td class="num">1</td><td class="num">0.0233</td><td>a sensible guess by eye</td></tr><tr><td class="num">2.0343</td><td class="num">0.9476</td><td class="num">0.0188</td><td>the bottom of the bowl</td></tr></tbody></table></div>
+<p>The gradient has two components now, one per dial. Each is Tuesday's chain rule applied to the squared error:</p>
+<div class="bigidea"><div class="bi-label">The two slopes of the mean squared error</div><p class="eq">∂L/∂w = 2·mean(e·x)&nbsp;&nbsp;&nbsp;&nbsp;∂L/∂b = 2·mean(e)</p><p>Compute the error once, <code>e = w·x + b − y</code>, then both slopes from it. A step moves <em>w</em> and <em>b</em> together — never one and then the other.</p></div>
+<div class="quiz"><h5>Before we descend</h5><p class="q-sub">Answer both without running anything.</p><button class="rbtn" onclick="tog('r1')">Show the answers</button><div class="reveal" id="r1"><p><strong>Q1. At w = 0, b = 0, is ∂L/∂w positive or negative?</strong> Every error <em>e = 0 − y</em> is negative, and every <em>x</em> is non-negative, so <em>mean(e·x)</em> is negative. The slope is negative, so the update <em>w ← w − η·(negative)</em> <em>increases</em> w — towards 2. The sign points away from the minimum, exactly as on Tuesday.</p><p><strong>Q2. Why does the <em>w</em> gradient carry an <em>x</em> but the <em>b</em> gradient does not?</strong> Because <em>b</em> is added to every prediction with coefficient 1, while <em>w</em> is multiplied by <em>x</em>. The chain rule brings that coefficient out. Points with large <em>x</em> therefore push harder on the slope — which is why, in Lab 7's extension, a large learning rate misbehaves sooner than Tuesday's cliff at 1.0.</p></div></div>
+
+<div class="module-header sky" data-num="4" id="descent">
+  <div class="mod-label">Part 4 · 15 minutes</div>
+  <h2>Throw the formula away, and descend</h2>
+  <p>The same six points, the same bowl, reached by walking.</p>
+</div>
+<div class="code-block"><div class="code-header"><span>Tuesday&#x27;s update, twice per step</span><span class="code-lang">python</span></div>
+<pre>w, b, lr = <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.02</span>
+<span class="kw">for</span> epoch in <span class="fn">range</span>(<span class="num">1000</span>):
+    e = w * x + b - y
+    w, b = w - lr * <span class="num">2</span> * np.<span class="fn">mean</span>(e * x), b - lr * <span class="num">2</span> * np.<span class="fn">mean</span>(e)
+<span class="fn">print</span>(<span class="fn">round</span>(w, <span class="num">4</span>), <span class="fn">round</span>(b, <span class="num">4</span>), <span class="fn">round</span>(np.<span class="fn">mean</span>((w * x + b - y) ** <span class="num">2</span>), <span class="num">4</span>))</pre>
+</div>
+<div class="code-block"><div class="code-header"><span>output</span><span class="code-lang shell">output</span></div>
+<pre>2.0343 0.9476 0.0188</pre>
+</div>
+<p>Identical to four decimals. Descent reached the bottom of the bowl without ever being told where it was — it only ever looked at the slope under its feet. It took a while: the loss was within 1% of the exact minimum after <strong>224</strong> of those thousand steps.</p>
+<div class="bigidea"><div class="bi-label">Why keep the slow method?</div><p>The formula exists because a straight line with squared error is a very special problem. On Tuesday next week, the prediction goes through a sigmoid, and there is no formula any more. By session 13 the model has thirteen parameters and by session 16 over a thousand. <strong>Descent does not care.</strong> It needs a loss and a slope, and nothing else — which is why every network you will ever train is trained this way.</p></div>
+
+<div class="module-header teal" data-num="5" id="lab">
+  <div class="mod-label">Lab 7 · 20 minutes in class</div>
+  <h2>The exact fit and the descended fit</h2>
+</div>
+<p>Lab 7 is a separate handout — <code>CSC4315_Lab07_Exact_Fit_And_Descended_Fit</code>. You write the closed form, then the two gradient lines, then find how many epochs it took to get within 1% of the exact answer. Data, plotting and the checks are given; the two ideas are yours.</p>
+<div class="callout tip"><div class="callout-icon">✅</div><div class="callout-body"><strong>The rules have not changed</strong><p>Finish in the room. Hand up after three minutes stuck. And watch for the one bug everyone meets: updating <code>w</code>, then recomputing the error before updating <code>b</code>. It runs, and it is a different algorithm.</p></div></div>
+
+<h3 id="next">Before Tuesday</h3>
+<ol><li><strong>Finish Lab 7.</strong></li><li><strong>Be able to state, without notes:</strong> the five words, what the test set is for, and the two MSE gradients.</li><li><strong>Think about this:</strong> if the label were <em>pass</em> or <em>fail</em> instead of a mark, what would go wrong with a straight line?</li></ol>
+<div class="callout tip"><div class="callout-icon">➡️</div><div class="callout-body"><strong>Session 11 — Tuesday 13 October, 16:00</strong><p>From predicting a number to predicting a class. The activation function appears for the first time, with a reason attached; so does cross-entropy, and the reason squared error is the wrong loss for a decision.</p></div></div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 10 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

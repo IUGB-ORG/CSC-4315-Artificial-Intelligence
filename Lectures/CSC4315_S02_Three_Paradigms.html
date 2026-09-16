@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 2 — Three Paradigms: Rules, Search, Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #faf9f6; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fde68a;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 4px 24px rgba(15,14,23,0.08);
+    --card-shadow-hover: 0 12px 40px rgba(15,14,23,0.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  .hero { background: var(--ink); color: var(--paper); padding: 76px 40px 56px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 72% 28%, rgba(124,58,237,0.35) 0%, transparent 60%),
+                radial-gradient(ellipse at 18% 82%, rgba(2,132,199,0.32) 0%, transparent 55%),
+                radial-gradient(ellipse at 92% 92%, rgba(13,148,136,0.25) 0%, transparent 50%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: rgba(232,168,56,0.2); border: 1px solid var(--gold);
+    color: var(--gold-light); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { font-size: 1.12rem; color: rgba(250,249,246,0.78); max-width: 640px; margin-bottom: 32px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--paper); padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.1); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; }
+  .toc a { color: rgba(250,249,246,0.65); text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    padding: 14px 15px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  .module-header { margin: 56px 0 28px; padding: 30px 34px; border-radius: 16px; position: relative; overflow: hidden; }
+  .module-header.teal { background: var(--teal); }
+  .module-header.violet { background: var(--violet); }
+  .module-header.gold { background: #92400e; }
+  .module-header.sky { background: #075985; }
+  .module-header.ink { background: var(--ink); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', serif; font-size: 5rem;
+    font-weight: 900; color: rgba(255,255,255,0.12); line-height: 1; }
+  .module-header .mod-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .module-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+    color: #fff; line-height: 1.2; }
+  .module-header p { color: rgba(255,255,255,0.82); margin-top: 8px; font-size: 0.97rem; max-width: 620px; }
+
+  h3 { font-family: 'Playfair Display', serif; font-size: 1.32rem; font-weight: 700; margin: 38px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    box-shadow: var(--card-shadow); transition: box-shadow 0.25s, transform 0.25s; }
+  .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-3px); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 14px; box-shadow: var(--card-shadow); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--ink); color: var(--paper); }
+  thead th { padding: 13px 15px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 12px 15px; font-size: 0.88rem; vertical-align: top; }
+  tbody tr:hover { background: var(--cream); }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip { background: var(--teal-light); border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3; border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light); border-left: 4px solid var(--sky); }
+  .callout.try { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light); border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body strong { display: block; margin-bottom: 4px; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: var(--gold-light); border: 1px solid #d9a441; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 24px 28px; margin: 28px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.05rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+  .bigidea p + p { margin-top: 12px; }
+
+  .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 18px 0; box-shadow: var(--card-shadow); }
+  .code-header { background: #2a2a3d; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .code-header span { color: rgba(255,255,255,0.55); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal); color: #fff; font-size: 0.7rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .code-lang.violet { background: var(--violet); }
+  pre { padding: 20px 22px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; line-height: 1.65; color: #cdd6f4; }
+  .kw { color: #cba6f7; } .str { color: #a6e3a1; } .cm { color: #6c7086; font-style: italic; }
+  .fn { color: #89b4fa; } .num { color: #fab387; } .var { color: #f38ba8; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    margin: 24px 0; box-shadow: var(--card-shadow); overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  .step-list { list-style: none; margin: 16px 0; }
+  .step-list li { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; flex-shrink: 0; }
+  .step-text strong { display: block; margin-bottom: 3px; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.rules { background: var(--violet-light); color: #5b21b6; }
+  .pill.search { background: var(--sky-light); color: #075985; }
+  .pill.learn { background: #ccfbf1; color: #115e59; }
+  .pill.none { background: var(--rose-light); color: #9f1239; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 2px 6px; border-radius: 5px; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px;
+    margin: 18px 0; box-shadow: var(--card-shadow); }
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 14px; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 1400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .rbtn { background: var(--ink); color: var(--paper); border: none; border-radius: 100px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; }
+  .rbtn:hover { background: var(--teal); }
+
+  .refs { font-size: 0.85rem; color: var(--slate); }
+  .refs li { margin-bottom: 8px; }
+  .refs a { color: var(--sky); text-decoration: none; border-bottom: 1px solid #bae6fd; }
+  .refs a:hover { border-bottom-color: var(--sky); }
+
+  footer { background: var(--ink); color: rgba(250,249,246,0.55); text-align: center;
+    padding: 32px 20px; font-size: 0.85rem; margin-top: 60px; }
+  footer strong { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 48px 20px 40px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ════ light format (applied Sept 2026): overrides the dark theme above ════ */
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 2 · Friday 11 September 2026</div>
+    <h1>Three paradigms:<br><em>rules, search, learning</em></h1>
+    <p class="lead">Last session you learned to ask where the rules came from. Today you meet the three answers — and discover that each of them, in its turn, was the thing everyone was sure would work.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 0 · What AI is</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">One minimax tree by hand</span>
+      <span class="tag">Still no calculus</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#diagresult">Diagnostic result</a>
+  <a href="#recap">Recap</a>
+  <a href="#rules">1 · Rules</a>
+  <a href="#search">2 · Search</a>
+  <a href="#minimax">Minimax by hand</a>
+  <a href="#learning">3 · Learning</a>
+  <a href="#compare">Side by side</a>
+  <a href="#alphazero">The rematch</a>
+  <a href="#exercise">Exercise</a>
+  <a href="#refs">Sources</a>
+</div></nav>
+
+<div class="page">
+
+<!-- ══════════════════════════ RECAP ══════════════════════════ -->
+<h3 id="diagresult">First: ninety seconds on Tuesday's diagnostic</h3>
+
+<div class="callout tip">
+  <div class="callout-icon">📊</div>
+  <div class="callout-body">
+    <strong>What the class looks like, and what changed because of it</strong>
+    <p>I promised on Tuesday that you would hear this, so it comes before anything else. Report the distribution honestly — how many at each band, and the single item most of the room got wrong — then say in one sentence what has changed as a result: how labs will be paired, where session 4 now starts, whether a clinic hour is being added, and who should come and see you this week.</p>
+    <p><em>Delivery note: ninety seconds, no names, no apology, then move on. The point is to prove the exercise was what you said it was. A room that believes that will tell you the truth again in November, which is when you will actually need it.</em></p>
+  </div>
+</div>
+
+<h3 id="recap">Where we left off</h3>
+
+<p>Two questions, asked in order. <strong>Does the task require intelligence at all?</strong> If yes: <strong>where did the rules come from?</strong> The first question separates AI from ordinary computation. The second sorts what is left into three families.</p>
+
+<p>Today we take those three families seriously — not as a tidy classification scheme, but as three genuine research programmes that each dominated the field for a period, each produced systems that worked, and each ran into a wall that the next one climbed over. You cannot understand why deep learning looks the way it does without knowing what it was reacting against.</p>
+
+<div class="bigidea">
+  <div class="bi-label">The claim of this session</div>
+  <p>These are not three levels of sophistication, with learning at the top. They are three different answers to one question: <em>how does knowledge get into the machine?</em> Each answer has a cost, and the cost is what determines which one you should reach for.</p>
+</div>
+
+<!-- ══════════════════════════ RULES ══════════════════════════ -->
+<div class="module-header violet" data-num="1" id="rules">
+  <div class="mod-label">Paradigm 1 · 20 minutes</div>
+  <h2>Rules-based: ask the expert, write it down</h2>
+  <p>The dominant approach from the mid-1970s to the late 1980s, and the most commercially successful period the field had known up to that point.</p>
+</div>
+
+<p>The idea is disarmingly simple. Intelligence in a specialist domain looks, from the outside, like a large number of learned associations. A doctor sees a set of symptoms and reaches a diagnosis. An engineer sees an order and knows which cable it needs. If you could get those associations out of the expert's head and into a file, the machine could apply them faster and more consistently than the expert ever could — and it would never be tired, distracted, or on holiday.</p>
+
+<p>So you sit with the expert. You ask them what they do. You write it down as rules.</p>
+
+<h3>What a rule actually looks like</h3>
+
+<p>MYCIN was built at Stanford in the early 1970s to diagnose bacterial blood infections and recommend antibiotics. Its knowledge base held roughly 500 to 600 rules of this shape:</p>
+
+<div class="code-block">
+  <div class="code-header"><span>a MYCIN-style production rule</span><span class="code-lang violet">rule base</span></div>
+<pre><span class="kw">IF</span>    the stain of the organism is gram-negative
+<span class="kw">AND</span>   the morphology of the organism is rod
+<span class="kw">AND</span>   the aerobicity of the organism is anaerobic
+<span class="kw">THEN</span>  there is suggestive evidence (<span class="num">0.6</span>)
+      that the identity of the organism is Bacteroides</pre>
+</div>
+
+<p>Three things are worth noticing, because all three come back later in the course.</p>
+
+<ul class="step-list">
+  <li><div class="step-num">1</div><div class="step-text"><strong>It is completely transparent</strong>
+    <p>You can read it. A doctor can read it, disagree with it, and tell you exactly which clause is wrong. Nothing in this course after session 13 will have that property, and you should feel the loss when it happens.</p></div></li>
+  <li><div class="step-num">2</div><div class="step-text"><strong>It carries a number — 0.6 — that a human chose</strong>
+    <p>MYCIN called these certainty factors. Somebody decided that this combination of evidence was worth 0.6 and not 0.7. Hold that thought: in session 13 you will meet a system with nine such numbers, and in session 26 one with millions — and none of them will be chosen by a person.</p></div></li>
+  <li><div class="step-num">3</div><div class="step-text"><strong>It only fires on exactly what it was given</strong>
+    <p>Gram-negative, rod, anaerobic. Nothing else. A case that is <em>nearly</em> this gets nothing at all. There is no notion of similarity anywhere in the system.</p></div></li>
+</ul>
+
+<h3>Did it work? Yes — and that is the uncomfortable part</h3>
+
+<div class="card-grid">
+  <div class="card"><div class="card-icon">🧬</div><h4>MYCIN · Stanford, 1970s</h4><p>In a blind evaluation, a panel of eight independent specialists judged MYCIN's therapy recommendations acceptable 65% of the time. Five Stanford faculty members scored between 42.5% and 62.5% on the same cases. The machine was competitive with the humans who taught it.</p></div>
+  <div class="card"><div class="card-icon">🖥️</div><h4>XCON / R1 · DEC, 1980</h4><p>Configured VAX computer orders. About 2,500 rules. By 1986 it had processed 80,000 orders at 95–98% accuracy and was estimated to be saving Digital Equipment Corporation around $25 million a year. Order fulfilment fell from weeks to days.</p></div>
+</div>
+
+<p>These were not laboratory toys. XCON is the reason the phrase <em>expert system</em> appeared in annual reports. An entire industry formed around building them, and for most of the 1980s that industry was what the words "artificial intelligence" meant commercially.</p>
+
+<h3>The two walls</h3>
+
+<div class="callout stop">
+  <div class="callout-icon">🧱</div>
+  <div class="callout-body">
+    <strong>Wall one — the knowledge acquisition bottleneck</strong>
+    <p>Experts cannot tell you what they know. A radiologist can look at a scan and say "that is wrong" in half a second and then spend twenty minutes failing to explain which pixels made them say it. The knowledge you most want is precisely the knowledge that never made it into words. Every rule-based system is capped, permanently, at what the expert could articulate — and that is a small fraction of what the expert can do.</p>
+  </div>
+</div>
+
+<div class="callout stop">
+  <div class="callout-icon">🧱</div>
+  <div class="callout-body">
+    <strong>Wall two — rules interact, and the interactions grow faster than the rules</strong>
+    <p>XCON started around 2,500 rules. By 1989 a successor system had grown to roughly 17,000 rules covering 31,000 components. Add rule 9,000 and it may silently contradict rule 300, in a case nobody has tested. Parts catalogues change by up to a third a year, so the rules never stop needing revision. The maintenance cost does not grow with the number of rules; it grows with the number of ways they can interact.</p>
+  </div>
+</div>
+
+<p>MYCIN was never used on a patient. Not because it did not work — the evaluation says it worked. It was never deployed because of unresolved questions about who is responsible when a program gives the wrong advice, and because entering a case took a physician more than half an hour. That is a lesson about deployment that has nothing to do with accuracy, and it is at least as relevant in 2026 as it was in 1976.</p>
+
+<p>When the expert-system market collapsed at the end of the 1980s, it did not collapse because the systems stopped working. It collapsed because they cost more to maintain than they saved. We will return to this in session 3 as the second AI winter.</p>
+
+<!-- ══════════════════════════ SEARCH ══════════════════════════ -->
+<div class="module-header sky" data-num="2" id="search">
+  <div class="mod-label">Paradigm 2 · 25 minutes</div>
+  <h2>Search-based: do not encode the answer, encode the goal</h2>
+  <p>Older than expert systems, and still running underneath a great deal of software you used this morning.</p>
+</div>
+
+<p>Search takes a different bet. Do not try to write down what a good move <em>is</em>. Write down what the legal moves are, write down how to recognise a good outcome, and then let the machine look ahead far enough to find the path that gets there.</p>
+
+<p>This turns intelligence into a resource problem, and that is its great appeal: resources get cheaper every year, and expert patience does not.</p>
+
+<h3>Why it is hard: the numbers</h3>
+
+<p>Consider chess. From a typical position there are around 35 legal moves. Your opponent then has around 35 replies. A full game runs about 80 half-moves.</p>
+
+<div class="diagram-wrap">
+<div class="diagram-title">The branching problem — why you cannot simply look at everything</div>
+<svg viewBox="0 0 820 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  <text x="20" y="34" font-family="DM Sans" font-size="13" font-weight="600" fill="#0f0e17">Positions to examine, looking ahead:</text>
+
+  <rect x="20" y="52" width="60" height="26" rx="6" fill="#e0f2fe" stroke="#0284c7"/>
+  <text x="50" y="70" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#075985">1 move</text>
+  <text x="96" y="70" font-family="JetBrains Mono" font-size="12" fill="#0f0e17">35</text>
+  <text x="150" y="70" font-family="DM Sans" font-size="11.5" fill="#475569">a person can do this</text>
+
+  <rect x="20" y="88" width="60" height="26" rx="6" fill="#e0f2fe" stroke="#0284c7"/>
+  <text x="50" y="106" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#075985">2 moves</text>
+  <text x="96" y="106" font-family="JetBrains Mono" font-size="12" fill="#0f0e17">1 225</text>
+  <text x="150" y="106" font-family="DM Sans" font-size="11.5" fill="#475569">a strong club player, roughly</text>
+
+  <rect x="20" y="124" width="60" height="26" rx="6" fill="#bae6fd" stroke="#0284c7"/>
+  <text x="50" y="142" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#075985">4 moves</text>
+  <text x="96" y="142" font-family="JetBrains Mono" font-size="12" fill="#0f0e17">1 500 625</text>
+  <text x="180" y="142" font-family="DM Sans" font-size="11.5" fill="#475569">already beyond any human</text>
+
+  <rect x="20" y="160" width="60" height="26" rx="6" fill="#7dd3fc" stroke="#0284c7"/>
+  <text x="50" y="178" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#0c4a6e">10 moves</text>
+  <text x="96" y="178" font-family="JetBrains Mono" font-size="12" fill="#0f0e17">≈ 2 750 000 000 000 000</text>
+  <text x="330" y="178" font-family="DM Sans" font-size="11.5" fill="#475569">Deep Blue territory</text>
+
+  <rect x="20" y="196" width="60" height="26" rx="6" fill="#0284c7" stroke="#0c4a6e"/>
+  <text x="50" y="214" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#fff">a game</text>
+  <text x="96" y="214" font-family="JetBrains Mono" font-size="12" fill="#0f0e17">≈ 10¹²⁰</text>
+  <text x="180" y="214" font-family="DM Sans" font-size="11.5" fill="#9f1239" font-weight="600">more than there are atoms in the observable universe (≈ 10⁸⁰)</text>
+</svg>
+</div>
+
+<p>That last number is Shannon's 1950 estimate of the chess game tree. It is not large in the way a big number is large. There is no computer, now or ever, that will examine 10<sup>120</sup> anything. Brute force in the literal sense is off the table permanently.</p>
+
+<p>So search-based AI is not really about searching everything. It is about three tricks for searching almost nothing and still being right:</p>
+
+<ul class="step-list">
+  <li><div class="step-num">1</div><div class="step-text"><strong>Stop early and guess</strong>
+    <p>Look ahead a fixed depth, then score the position with an <em>evaluation function</em> instead of playing to the end. This is where all the human knowledge hides.</p></div></li>
+  <li><div class="step-num">2</div><div class="step-text"><strong>Assume the opponent plays well — minimax</strong>
+    <p>You pick the move that maximises your score; your opponent picks the reply that minimises it. Alternate. This is the algorithm you will run by hand in two minutes.</p></div></li>
+  <li><div class="step-num">3</div><div class="step-text"><strong>Prove whole branches irrelevant — alpha-beta pruning</strong>
+    <p>Often you can show a branch cannot possibly affect the answer without examining it. In the best case this lets you search twice as deep for the same effort.</p></div></li>
+</ul>
+
+<!-- ══════════════════════════ MINIMAX ══════════════════════════ -->
+<h3 id="minimax">Do this now — minimax on paper, two minutes</h3>
+
+<p>You are MAX, at the root. It is your move; you choose among three. Your opponent MIN then chooses among three replies. The nine numbers at the bottom are the scores of the resulting positions, from your point of view — bigger is better for you.</p>
+
+<div class="diagram-wrap">
+<div class="diagram-title">Work upward from the leaves. Which move should MAX play?</div>
+<svg viewBox="0 0 800 290" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  <!-- root -->
+  <rect x="355" y="16" width="90" height="34" rx="8" fill="#0f0e17"/>
+  <text x="400" y="38" text-anchor="middle" font-family="DM Sans" font-size="13" font-weight="700" fill="#fff">MAX  ?</text>
+
+  <!-- edges root -> min -->
+  <line x1="400" y1="50" x2="150" y2="106" stroke="#475569" stroke-width="2"/>
+  <line x1="400" y1="50" x2="400" y2="106" stroke="#475569" stroke-width="2"/>
+  <line x1="400" y1="50" x2="650" y2="106" stroke="#475569" stroke-width="2"/>
+  <text x="258" y="76" font-family="DM Sans" font-size="11" fill="#475569">move A</text>
+  <text x="408" y="80" font-family="DM Sans" font-size="11" fill="#475569">move B</text>
+  <text x="530" y="76" font-family="DM Sans" font-size="11" fill="#475569">move C</text>
+
+  <!-- min nodes -->
+  <rect x="105" y="106" width="90" height="32" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="150" y="127" text-anchor="middle" font-family="DM Sans" font-size="12.5" font-weight="700" fill="#075985">MIN  ?</text>
+  <rect x="355" y="106" width="90" height="32" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="400" y="127" text-anchor="middle" font-family="DM Sans" font-size="12.5" font-weight="700" fill="#075985">MIN  ?</text>
+  <rect x="605" y="106" width="90" height="32" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="650" y="127" text-anchor="middle" font-family="DM Sans" font-size="12.5" font-weight="700" fill="#075985">MIN  ?</text>
+
+  <!-- leaves -->
+  <g font-family="JetBrains Mono" font-size="14" font-weight="500">
+    <line x1="150" y1="138" x2="70" y2="200" stroke="#94a3b8" stroke-width="1.6"/>
+    <line x1="150" y1="138" x2="150" y2="200" stroke="#94a3b8" stroke-width="1.6"/>
+    <line x1="150" y1="138" x2="230" y2="200" stroke="#94a3b8" stroke-width="1.6"/>
+    <circle cx="70" cy="216" r="19" fill="#fff" stroke="#0f0e17" stroke-width="1.6"/><text x="70" y="221" text-anchor="middle" fill="#0f0e17">3</text>
+    <circle cx="150" cy="216" r="19" fill="#fff" stroke="#0f0e17" stroke-width="1.6"/><text x="150" y="221" text-anchor="middle" fill="#0f0e17">12</text>
+    <circle cx="230" cy="216" r="19" fill="#fff" stroke="#0f0e17" stroke-width="1.6"/><text x="230" y="221" text-anchor="middle" fill="#0f0e17">8</text>
+
+    <line x1="400" y1="138" x2="320" y2="200" stroke="#94a3b8" stroke-width="1.6"/>
+    <line x1="400" y1="138" x2="400" y2="200" stroke="#94a3b8" stroke-width="1.6"/>
+    <line x1="400" y1="138" x2="480" y2="200" stroke="#94a3b8" stroke-width="1.6"/>
+    <circle cx="320" cy="216" r="19" fill="#fff" stroke="#0f0e17" stroke-width="1.6"/><text x="320" y="221" text-anchor="middle" fill="#0f0e17">2</text>
+    <circle cx="400" cy="216" r="19" fill="#fff" stroke="#0f0e17" stroke-width="1.6"/><text x="400" y="221" text-anchor="middle" fill="#0f0e17">4</text>
+    <circle cx="480" cy="216" r="19" fill="#fff" stroke="#0f0e17" stroke-width="1.6"/><text x="480" y="221" text-anchor="middle" fill="#0f0e17">6</text>
+
+    <line x1="650" y1="138" x2="570" y2="200" stroke="#94a3b8" stroke-width="1.6"/>
+    <line x1="650" y1="138" x2="650" y2="200" stroke="#94a3b8" stroke-width="1.6"/>
+    <line x1="650" y1="138" x2="730" y2="200" stroke="#94a3b8" stroke-width="1.6"/>
+    <circle cx="570" cy="216" r="19" fill="#fff" stroke="#0f0e17" stroke-width="1.6"/><text x="570" y="221" text-anchor="middle" fill="#0f0e17">14</text>
+    <circle cx="650" cy="216" r="19" fill="#fff" stroke="#0f0e17" stroke-width="1.6"/><text x="650" y="221" text-anchor="middle" fill="#0f0e17">5</text>
+    <circle cx="730" cy="216" r="19" fill="#fff" stroke="#0f0e17" stroke-width="1.6"/><text x="730" y="221" text-anchor="middle" fill="#0f0e17">6</text>
+  </g>
+  <text x="400" y="270" text-anchor="middle" font-family="DM Sans" font-size="11.5" fill="#475569" font-style="italic">Scores are from MAX's point of view. MIN will always choose the smallest number available.</text>
+</svg>
+</div>
+
+<div class="quiz">
+  <h5>Worked answer</h5>
+  <p class="q-sub">Try it before opening this. Most people get it wrong the first time, and the reason they get it wrong is the interesting part.</p>
+  <button class="rbtn" onclick="tog('rmm')">Show the working</button>
+  <div class="reveal" id="rmm">
+    <p><strong>Left MIN node:</strong> chooses the smallest of 3, 12, 8 → <strong>3</strong>.<br>
+       <strong>Middle MIN node:</strong> smallest of 2, 4, 6 → <strong>2</strong>.<br>
+       <strong>Right MIN node:</strong> smallest of 14, 5, 6 → <strong>5</strong>.</p>
+    <p><strong>Root MAX:</strong> largest of 3, 2, 5 → <strong>5</strong>. <strong>MAX plays move C.</strong></p>
+    <p>Now the trap. The single best number on the board is 14, and it sits under move C — but you will never receive it, because after you play C your opponent simply plays the reply worth 5. And the 12 under move A is equally unreachable. <em>You do not get to choose the leaf. You only choose the subtree.</em> That one sentence is what minimax is.</p>
+    <p><strong>And now pruning.</strong> Suppose you evaluate left to right. After the left MIN node you know you can guarantee at least 3. You then look at the middle node's first leaf and see 2. MIN will end up with <em>at most</em> 2 there — you already know it can't beat 3, so the remaining two leaves under move B can never change your decision. Skip them. Two of nine leaves never examined, with no loss of correctness. That is alpha-beta pruning, and at scale it is the difference between searching six moves ahead and twelve.</p>
+  </div>
+</div>
+
+<h3>Deep Blue, and the part of the story that is usually left out</h3>
+
+<p>In May 1997 Deep Blue beat the reigning world champion Garry Kasparov in a six-game match. The headline figures are genuinely astonishing:</p>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th>Deep Blue, 1997</th><th></th></tr></thead>
+  <tbody>
+    <tr><td class="rowlab">Positions evaluated per second</td><td>around 200 million</td></tr>
+    <tr><td class="rowlab">Kasparov, for comparison</td><td>roughly 5</td></tr>
+    <tr><td class="rowlab">Hardware</td><td>30 processor nodes driving 480 custom chess chips</td></tr>
+    <tr><td class="rowlab">Typical search depth</td><td>six to twelve half-moves, up to forty in forced lines</td></tr>
+    <tr><td class="rowlab">Terms in the evaluation function</td><td><strong>about 8,000</strong></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>That last row is the one to sit with. Eight thousand features — passed pawns, bishop pairs, king safety scaled by the material left on the board — each designed by a human being and each carrying a weight that a human chose. The team has said that between the 1996 and 1997 matches, the great majority of their effort went into designing, testing and tuning that evaluation function, with a grandmaster on the team to advise. They also built automated tools to help tune the weights, and one of those tools found that the hand-chosen king-safety weights had been systematically too low.</p>
+
+<div class="bigidea">
+  <div class="bi-label">Apply the two-question test to Deep Blue</div>
+  <p>Question 1: playing world-class chess plainly requires intelligence when a human does it. <span class="pill search">passes</span></p>
+  <p>Question 2: every rule came from a human. The legal moves, the search procedure, and all eight thousand evaluation terms. Deep Blue learned nothing, and was exactly the same machine after the match as before it.</p>
+  <p>So it is AI, and it is <em>not</em> machine learning. If your definition of AI cannot accommodate that sentence, your definition is broken.</p>
+</div>
+
+<div class="callout info">
+  <div class="callout-icon">🗺️</div>
+  <div class="callout-body">
+    <strong>The same paradigm, in your pocket</strong>
+    <p>When you ask for the fastest route from Grand-Bassam to Abidjan, the software builds a graph of intersections and roads, assigns each road a cost from live traffic, and runs a shortest-path search over it. No learning is involved in the routing itself. This is search-based AI, working perfectly, several million times a day — and almost nobody calls it AI any more, which is exactly the effect we noticed in session 1.</p>
+  </div>
+</div>
+
+<h3>The wall search hit</h3>
+
+<p>Search needs two things the world often refuses to supply: a <strong>complete set of legal moves</strong>, and a <strong>scoring function for a position</strong>. Chess has both by definition. Route-finding has both.</p>
+
+<p>Now ask what the legal moves are for "is there a cat in this photograph," or "is this email spam," or "what is the next word in this sentence." There are none. There is no game tree. There is nothing to search. Search-based AI was not defeated in its own domain — it is still undefeated at route-finding — it simply had no way to enter the domains that came to matter most.</p>
+
+<!-- ══════════════════════════ LEARNING ══════════════════════════ -->
+<div class="module-header teal" data-num="3" id="learning">
+  <div class="mod-label">Paradigm 3 · 18 minutes</div>
+  <h2>Learning-based: stop writing rules, start supplying examples</h2>
+  <p>The third answer inverts the problem — and it is the one you will spend the next twenty-five sessions building.</p>
+</div>
+
+<p>The move is this. You do not know the rule. The expert does not know the rule either, not in words. But you have ten thousand cases where you know the right answer. So: write a program with adjustable numbers inside it, show it the cases, and adjust the numbers until it gets them right.</p>
+
+<div class="diagram-wrap">
+<div class="diagram-title">The inversion — what goes in, and what comes out</div>
+<svg viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  <text x="200" y="26" text-anchor="middle" font-family="DM Sans" font-size="13" font-weight="700" fill="#5b21b6">RULES-BASED &amp; SEARCH-BASED</text>
+  <rect x="60" y="44" width="120" height="42" rx="9" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8"/>
+  <text x="120" y="62" text-anchor="middle" font-family="DM Sans" font-size="11.5" fill="#5b21b6">RULES</text>
+  <text x="120" y="78" text-anchor="middle" font-family="DM Sans" font-size="10.5" fill="#6d28d9">written by a person</text>
+  <rect x="60" y="98" width="120" height="42" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/>
+  <text x="120" y="116" text-anchor="middle" font-family="DM Sans" font-size="11.5" fill="#334155">DATA</text>
+  <text x="120" y="132" text-anchor="middle" font-family="DM Sans" font-size="10.5" fill="#64748b">a new case</text>
+  <path d="M186 70 Q 232 92 232 92 Q 232 92 186 114" fill="none" stroke="#475569" stroke-width="2"/>
+  <rect x="238" y="70" width="82" height="44" rx="9" fill="#0f0e17"/>
+  <text x="279" y="97" text-anchor="middle" font-family="DM Sans" font-size="11.5" fill="#fff">COMPUTER</text>
+  <path d="M324 92 H 356" stroke="#475569" stroke-width="2" marker-end="url(#a1)"/>
+  <rect x="360" y="70" width="82" height="44" rx="9" fill="#fde68a" stroke="#b45309" stroke-width="1.8"/>
+  <text x="401" y="97" text-anchor="middle" font-family="DM Sans" font-size="11.5" fill="#78350f">ANSWERS</text>
+
+  <line x1="30" y1="160" x2="770" y2="160" stroke="#e2e0da" stroke-width="1.5"/>
+
+  <text x="200" y="186" text-anchor="middle" font-family="DM Sans" font-size="13" font-weight="700" fill="#115e59">LEARNING-BASED — the same boxes, rearranged</text>
+  <rect x="60" y="200" width="120" height="40" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.8"/>
+  <text x="120" y="217" text-anchor="middle" font-family="DM Sans" font-size="11.5" fill="#334155">DATA</text>
+  <text x="120" y="232" text-anchor="middle" font-family="DM Sans" font-size="10.5" fill="#64748b">cases + right answers</text>
+  <path d="M186 220 H 238" stroke="#0d9488" stroke-width="2" marker-end="url(#a2)"/>
+  <rect x="242" y="198" width="82" height="44" rx="9" fill="#0f0e17"/>
+  <text x="283" y="225" text-anchor="middle" font-family="DM Sans" font-size="11.5" fill="#fff">COMPUTER</text>
+  <path d="M328 220 H 380" stroke="#0d9488" stroke-width="2" marker-end="url(#a2)"/>
+  <rect x="384" y="198" width="120" height="44" rx="9" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+  <text x="444" y="216" text-anchor="middle" font-family="DM Sans" font-size="11.5" fill="#115e59">RULES</text>
+  <text x="444" y="232" text-anchor="middle" font-family="DM Sans" font-size="10.5" fill="#0f766e">found by the machine</text>
+  <text x="530" y="224" font-family="DM Sans" font-size="12" fill="#9f1239" font-weight="600">rules are the OUTPUT, not the input</text>
+
+  <defs>
+    <marker id="a1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#475569"/></marker>
+    <marker id="a2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#0d9488"/></marker>
+  </defs>
+</svg>
+</div>
+
+<h3>Concretely: the spam filter</h3>
+
+<p>Nobody sat down and wrote <em>if the message contains "lottery" then it is spam</em>. What happened is duller and far more powerful. The filter was given a million emails, each already labelled spam or not by a human who pressed a button. It then counted.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>what counting a million labelled emails produces</span><span class="code-lang">learned</span></div>
+<pre><span class="cm"># nobody wrote these numbers. they were counted.</span>
+word          in spam    in normal mail    evidence
+<span class="str">"lottery"</span>       <span class="num">4.1%</span>            <span class="num">0.01%</span>         strong spam
+<span class="str">"winner"</span>        <span class="num">3.8%</span>            <span class="num">0.20%</span>         strong spam
+<span class="str">"meeting"</span>       <span class="num">0.3%</span>            <span class="num">7.40%</span>         strong normal
+<span class="str">"attached"</span>      <span class="num">0.9%</span>            <span class="num">6.10%</span>         normal
+<span class="str">"the"</span>           <span class="num">92.0%</span>          <span class="num">93.00%</span>         useless — ignore</pre>
+</div>
+
+<p>Two features of this deserve emphasis. First, the system discovered that <code>"the"</code> is worthless as evidence — nobody told it, it fell out of the counts. Second, and this is the decisive advantage over rules: when spammers change tactics, you do not rewrite anything. You supply newer labelled mail and the numbers move by themselves. A rule-based filter would need a person to notice, diagnose and edit. This one adapts because adaptation is the mechanism.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">🔗</div>
+  <div class="callout-body">
+    <strong>You have already seen the machinery</strong>
+    <p>In session 1's setup lab you computed <code>X @ W + b</code>. <code>W</code> is a table of numbers exactly like the one above — evidence weights, one per input. The whole of units 2 and 3 of this course is about how those numbers get set automatically, and you will do it by hand before you do it in code.</p>
+  </div>
+</div>
+
+<h3>What it costs</h3>
+
+<div class="card-grid">
+  <div class="card"><div class="card-icon">📊</div><h4>You need labelled data — a lot of it</h4><p>And someone has to have labelled it. The 2012 breakthrough you meet in session 3 rested on a dataset of over a million hand-labelled images, which took years to assemble. No data, no learning. This is the binding constraint far more often than algorithms are.</p></div>
+  <div class="card"><div class="card-icon">🕳️</div><h4>You lose the explanation</h4><p>MYCIN could tell a doctor which clause fired. A trained network has millions of numbers and no story. In medicine, credit and criminal justice this is not a technicality — it can be the reason a working system is not allowed to be deployed.</p></div>
+  <div class="card"><div class="card-icon">🪞</div><h4>It learns what is in the data, not what is true</h4><p>Including every bias in it. A hiring model trained on ten years of a company's decisions learns that company's history, faithfully. The model is not wrong; it is an accurate mirror, which is worse.</p></div>
+</div>
+
+<!-- ══════════════════════════ COMPARE ══════════════════════════ -->
+<div class="module-header gold" data-num="4" id="compare">
+  <div class="mod-label">Synthesis · 8 minutes</div>
+  <h2>Side by side</h2>
+  <p>One table to keep. When you meet a new system this semester, this is the grid to place it on.</p>
+</div>
+
+<div class="tool-table-wrap">
+<table>
+  <thead>
+    <tr><th style="width:20%"></th>
+        <th><span class="pill rules">RULES-BASED</span></th>
+        <th><span class="pill search">SEARCH-BASED</span></th>
+        <th><span class="pill learn">LEARNING-BASED</span></th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="rowlab">Where knowledge lives</td><td>In the rule base</td><td>In the evaluation function and the move generator</td><td>In the weights</td></tr>
+    <tr><td class="rowlab">Who supplies it</td><td>A human expert, in words</td><td>A human, as a goal and a scoring function</td><td>The data, via a training procedure</td></tr>
+    <tr><td class="rowlab">Peak era</td><td>1975 – 1990</td><td>1960 – present, continuously</td><td>2012 – present</td></tr>
+    <tr><td class="rowlab">Canonical example</td><td>MYCIN · XCON</td><td>Deep Blue · route finding</td><td>Spam filters · AlexNet · ChatGPT</td></tr>
+    <tr><td class="rowlab">Can you read why?</td><td>Yes, completely</td><td>Yes, in principle — the tree is inspectable</td><td>Essentially no</td></tr>
+    <tr><td class="rowlab">Typical failure</td><td>Brittle. Silent on anything not anticipated</td><td>The space is too large, or there is no space at all</td><td>Confidently wrong on data unlike its training set</td></tr>
+    <tr><td class="rowlab">To improve it you…</td><td>Interview the expert again and edit rules</td><td>Buy faster hardware, or improve the evaluation</td><td>Get more and better data</td></tr>
+    <tr><td class="rowlab">Scales with</td><td>Expert patience <span class="pill none">the bottleneck</span></td><td>Compute</td><td>Data <em>and</em> compute</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Look at the last row. Rules-based AI scales with a resource that does not grow — human patience and articulacy. The other two scale with resources that have been getting exponentially cheaper for fifty years. That, more than any argument about elegance, is why the field moved.</p>
+
+<!-- ══════════════════════════ ALPHAZERO ══════════════════════════ -->
+<div class="module-header ink" data-num="5" id="alphazero">
+  <div class="mod-label">The closing argument · 6 minutes</div>
+  <h2>Twenty years later, someone played the rematch</h2>
+  <p>The cleanest demonstration that these are competing answers to one question, and not three historical periods.</p>
+</div>
+
+<p>Chess was search-based AI's crown jewel. In December 2017 DeepMind pointed the third paradigm at it.</p>
+
+<p>AlphaZero was given the rules of chess and nothing else. No opening book, no endgame tables, no grandmaster advice, no hand-designed evaluation features. It played against itself, starting from random moves, and adjusted its own weights based on what won. After roughly four hours of self-play it played a hundred-game match against Stockfish, then the strongest engine in the world and a direct descendant of Deep Blue's approach. AlphaZero won 28, drew 72, and lost none.</p>
+
+<div class="bigidea">
+  <div class="bi-label">The number that should stop you</div>
+  <p>Stockfish examined about <strong>70 million</strong> positions per second. AlphaZero examined about <strong>80 thousand</strong> — nearly a thousand times fewer — and won every match it did not draw.</p>
+  <p>It did not out-search its opponent. It out-<em>judged</em> it. All the effort that Deep Blue's team spent hand-crafting eight thousand evaluation terms, AlphaZero replaced with a learned function that was simply better, and that no human wrote or could read.</p>
+</div>
+
+<p>This is the whole argument of the course in one result. The same problem, attacked by two paradigms twenty years apart. The hand-written knowledge was excellent — it beat the world champion. The learned knowledge was better, and it was obtained in four hours by a system that started knowing nothing but the rules.</p>
+
+<p>Two honest qualifications, because the story is usually told without them. Those four hours consumed thousands of specialised processors running in parallel, which is not four hours of anything you own. And AlphaZero can play chess, shogi and Go, and cannot configure a VAX, diagnose an infection, or tell you why it did anything at all. Rules-based systems are still deployed today wherever an auditor may ask you to justify a decision.</p>
+
+<!-- ══════════════════════════ EXERCISE ══════════════════════════ -->
+<h3 id="exercise">Exercise — classify these twelve</h3>
+
+<p>For each system: apply question 1. If it passes, apply question 2 and name the paradigm. Several are deliberately arguable and one or two are hybrids — say so, and defend it. <strong>On paper, in pairs, in the room</strong> — no laptops and no searching. The disagreement between the two of you is the part that teaches, and asking a model for the answer removes it. Bring your sheet Tuesday.</p>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th style="width:34px">#</th><th>System</th><th style="width:38%">The trap to watch for</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>A chess engine on your phone</td><td>Which engine? The answer changed in 2017.</td></tr>
+    <tr><td>2</td><td>The autocorrect on your keyboard</td><td>It has been both, historically.</td></tr>
+    <tr><td>3</td><td>A bank's fraud alert on your card</td><td>Almost always two paradigms in one pipeline.</td></tr>
+    <tr><td>4</td><td>A washing machine's "smart" cycle</td><td>Start with question 1, not question 2.</td></tr>
+    <tr><td>5</td><td>A Sudoku solver</td><td>Does it pass question 1 at all? Argue both sides.</td></tr>
+    <tr><td>6</td><td>Face unlock on a phone</td><td>What was the training data, and whose faces were in it?</td></tr>
+    <tr><td>7</td><td>Airline seat and crew scheduling</td><td>An enormous space with hard constraints.</td></tr>
+    <tr><td>8</td><td>A malaria rapid diagnostic test</td><td>Careful — is there a computer in this at all?</td></tr>
+    <tr><td>9</td><td>Software reading a blood smear for parasites</td><td>Compare directly with number 8.</td></tr>
+    <tr><td>10</td><td>A university timetabling system</td><td>Compare with number 7.</td></tr>
+    <tr><td>11</td><td>Google Translate, in 2005 and in 2026</td><td>Same product, different paradigm. This is the point.</td></tr>
+    <tr><td>12</td><td>ChatGPT deciding to run a web search</td><td>The model is learned. Is the decision to search?</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout try">
+  <div class="callout-icon">✍️</div>
+  <div class="callout-body">
+    <strong>Also due Tuesday — one paragraph</strong>
+    <p>Choose one task from your own field or daily life that you think <em>should not</em> be handed to a learning-based system, and say which paradigm you would use instead and why. The strongest answers will name a specific cost from the table above.</p>
+  </div>
+</div>
+
+<div class="callout info">
+  <div class="callout-icon">➡️</div>
+  <div class="callout-body">
+    <strong>Session 3 — Tuesday 15 September, 16:00</strong>
+    <p>Eighty years, and where we actually are. The field's two public collapses and what caused them both; then the fact that is harder to swallow than either — almost every idea behind the 2012 breakthrough was already published and had sat unused for twenty-five years. The second half of that session brings the story to this month: what current systems can and cannot do, how to read a leaderboard without being fooled by it, and why this course is being taught in Grand-Bassam.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ REFS ══════════════════════════ -->
+<h3 id="refs">Sources for the figures quoted today</h3>
+
+<ul class="refs">
+  <li><strong>MYCIN</strong> — rule count, the eight-specialist evaluation, and why it was never deployed: Buchanan &amp; Shortliffe, <em>Rule-Based Expert Systems: The MYCIN Experiments</em> (Addison-Wesley, 1984), available at <a href="https://people.dbmi.columbia.edu/shortliffe/Buchanan-Shortliffe-1984/Chapter-32.pdf">people.dbmi.columbia.edu</a>.</li>
+  <li><strong>XCON / R1</strong> — 2,500 rules, 80,000 orders, 95–98% accuracy, ~$25M annual saving: <a href="https://en.wikipedia.org/wiki/Xcon">Wikipedia, "Xcon"</a>. Growth to ~17,000 rules and 31,000 components by 1989 is reported in the configuration literature (arXiv:cs/0312020).</li>
+  <li><strong>Deep Blue</strong> — 200 million positions per second, search depth, and the ~8,000-term evaluation function: Campbell, Hoane &amp; Hsu, "Deep Blue", <em>Artificial Intelligence</em> 134 (2002), 57–83; and <a href="https://www.ibm.com/history/deep-blue">IBM's own account</a>.</li>
+  <li><strong>AlphaZero</strong> — 80,000 vs 70 million positions per second, and the 28–72–0 match result: Silver et al., "Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm", arXiv, 2017; match reporting at <a href="https://www.chess.com/news/view/google-s-alphazero-destroys-stockfish-in-100-game-match">chess.com</a>.</li>
+  <li><strong>The chess game-tree estimate</strong> (≈10<sup>120</sup>) — Claude Shannon, "Programming a Computer for Playing Chess", <em>Philosophical Magazine</em>, 1950.</li>
+</ul>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 2 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

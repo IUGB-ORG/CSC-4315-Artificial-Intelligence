@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 11 — One neuron: sigmoid, cross-entropy, a decision boundary</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 11 · Tuesday 13 October 2026</div>
+    <h1>One neuron:<br><em>sigmoid, cross-entropy, a boundary</em></h1>
+    <p class="lead">Friday's line predicted a number. Most questions worth asking a model are yes-or-no: will this patient miss the appointment, is this email spam, is this digit even. One new function turns a score into a probability, one new loss makes the probability honest, and the loop from Friday does the rest.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 2 · From scratch</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 8 · one neuron</span>
+      <span class="tag">The first activation function</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#why">Why not a line</a>
+  <a href="#sigmoid">The sigmoid</a>
+  <a href="#bce">Cross-entropy</a>
+  <a href="#loop">Training</a>
+  <a href="#lab">Lab 8</a>
+  <a href="#next">Before Friday</a>
+</div></nav>
+
+<div class="page">
+
+<div class="module-header ink" data-num="1" id="why">
+  <div class="mod-label">Part 1 · 10 minutes</div>
+  <h2>Why a straight line cannot say yes or no</h2>
+  <p>Predicting 1.37 for "did they pass?" is not an answer.</p>
+</div>
+<p>Keep Friday's model and change only the label: <em>y</em> = 1 if the student passed, 0 if not. Fit a line and it will happily predict 1.37 for a student who revised a lot and −0.2 for one who did not. Neither is a probability, and a single very diligent student far to the right drags the whole line flat. We need an output that lives between 0 and 1 and a model that reads as <em>how confident am I that the answer is yes</em>.</p>
+
+<div class="module-header teal" data-num="2" id="sigmoid">
+  <div class="mod-label">Part 2 · 15 minutes</div>
+  <h2>The sigmoid: any number in, a probability out</h2>
+  <p>The first activation function, introduced because we need it.</p>
+</div>
+<div class="bigidea"><div class="bi-label">The neuron, in two lines</div><p class="eq">z = w·x + b&nbsp;&nbsp;&nbsp;&nbsp;p = σ(z) = 1 / (1 + e<sup>−z</sup>)</p><p>Compute a score exactly as on Friday — a weighted sum plus a bias. Then squash it.</p></div>
+<div class="diagram-wrap"><div class="diagram-title">The sigmoid never reaches 0 or 1 — a neuron is never completely certain</div>
+<svg viewBox="0 0 720 290" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto"><defs><marker id="ah" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#475569"/></marker></defs><line x1="60" y1="240" x2="660" y2="240" stroke="#94a3b8" stroke-width="1.5"/><line x1="360" y1="20" x2="360" y2="250" stroke="#94a3b8" stroke-width="1.5"/><line x1="60" y1="40" x2="660" y2="40" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/><text x="52" y="44" font-size="12" fill="#475569" text-anchor="end" font-weight="400" >1</text><text x="52" y="244" font-size="12" fill="#475569" text-anchor="end" font-weight="400" >0</text><path d="M60.0,239.5 L65.0,239.5 L70.0,239.4 L75.0,239.3 L80.0,239.3 L85.0,239.2 L90.0,239.1 L95.0,239.0 L100.0,238.9 L105.0,238.8 L110.0,238.7 L115.0,238.5 L120.0,238.4 L125.0,238.2 L130.0,238.0 L135.0,237.8 L140.0,237.6 L145.0,237.3 L150.0,237.0 L155.0,236.7 L160.0,236.4 L165.0,236.0 L170.0,235.6 L175.0,235.2 L180.0,234.7 L185.0,234.1 L190.0,233.5 L195.0,232.9 L200.0,232.2 L205.0,231.4 L210.0,230.5 L215.0,229.6 L220.0,228.5 L225.0,227.4 L230.0,226.2 L235.0,224.8 L240.0,223.4 L245.0,221.8 L250.0,220.0 L255.0,218.2 L260.0,216.2 L265.0,214.0 L270.0,211.6 L275.0,209.1 L280.0,206.4 L285.0,203.5 L290.0,200.4 L295.0,197.2 L300.0,193.7 L305.0,190.1 L310.0,186.2 L315.0,182.2 L320.0,178.0 L325.0,173.6 L330.0,169.1 L335.0,164.5 L340.0,159.7 L345.0,154.9 L350.0,150.0 L355.0,145.0 L360.0,140.0 L365.0,135.0 L370.0,130.0 L375.0,125.1 L380.0,120.3 L385.0,115.5 L390.0,110.9 L395.0,106.4 L400.0,102.0 L405.0,97.8 L410.0,93.8 L415.0,89.9 L420.0,86.3 L425.0,82.8 L430.0,79.6 L435.0,76.5 L440.0,73.6 L445.0,70.9 L450.0,68.4 L455.0,66.0 L460.0,63.8 L465.0,61.8 L470.0,60.0 L475.0,58.2 L480.0,56.6 L485.0,55.2 L490.0,53.8 L495.0,52.6 L500.0,51.5 L505.0,50.4 L510.0,49.5 L515.0,48.6 L520.0,47.8 L525.0,47.1 L530.0,46.5 L535.0,45.9 L540.0,45.3 L545.0,44.8 L550.0,44.4 L555.0,44.0 L560.0,43.6 L565.0,43.3 L570.0,43.0 L575.0,42.7 L580.0,42.4 L585.0,42.2 L590.0,42.0 L595.0,41.8 L600.0,41.6 L605.0,41.5 L610.0,41.3 L615.0,41.2 L620.0,41.1 L625.0,41.0 L630.0,40.9 L635.0,40.8 L640.0,40.7 L645.0,40.7 L650.0,40.6 L655.0,40.5 L660.0,40.5" fill="none" stroke="#7c3aed" stroke-width="3"/><circle cx="260" cy="216.2" r="5" fill="#e11d48" stroke="#e11d48" stroke-width="1.5"/><text x="260" y="204.2" font-size="12" fill="#9f1239" text-anchor="middle" font-weight="400" font-family="JetBrains Mono, monospace" >σ(-2) = 0.119</text><circle cx="360" cy="140.0" r="5" fill="#e11d48" stroke="#e11d48" stroke-width="1.5"/><text x="394" y="128.0" font-size="12" fill="#9f1239" text-anchor="middle" font-weight="400" font-family="JetBrains Mono, monospace" >σ(0) = 0.5</text><circle cx="460" cy="63.80000000000001" r="5" fill="#e11d48" stroke="#e11d48" stroke-width="1.5"/><text x="460" y="51.80000000000001" font-size="12" fill="#9f1239" text-anchor="middle" font-weight="400" font-family="JetBrains Mono, monospace" >σ(2) = 0.881</text><text x="360" y="275" font-size="13" fill="#475569" text-anchor="middle" font-weight="400" >score  z</text><text x="150" y="120" font-size="12" fill="#475569" text-anchor="middle" font-weight="400" >very negative score → almost certainly no</text><text x="560" y="200" font-size="12" fill="#475569" text-anchor="middle" font-weight="400" >very positive → almost certainly yes</text></svg>
+</div>
+<div class="tool-table-wrap"><table><thead><tr><th>z</th><th class="num">−4</th><th class="num">−2</th><th class="num">0</th><th class="num">2</th><th class="num">4</th></tr></thead><tbody><tr><td>σ(z)</td><td class="num">0.018</td><td class="num">0.119</td><td class="num">0.500</td><td class="num">0.881</td><td class="num">0.982</td></tr></tbody></table></div>
+<p>Three facts to hold on to. <strong>σ(0) = 0.5</strong>: a score of zero is a coin toss. The curve is symmetric: σ(−z) = 1 − σ(z). And its slope, which backpropagation will need, is written with its own output: <strong>σ′(z) = σ(z)(1 − σ(z))</strong> — largest at 0.25 in the middle and almost zero at the extremes. Remember that last fact; it explains a failure in session 19.</p>
+
+<div class="module-header violet" data-num="3" id="bce">
+  <div class="mod-label">Part 3 · 18 minutes</div>
+  <h2>Cross-entropy: the loss that punishes confident mistakes</h2>
+  <p>And why squared error is the wrong loss for a decision.</p>
+</div>
+<div class="bigidea"><div class="bi-label">Binary cross-entropy</div><p class="eq">L = −mean( y·log p + (1 − y)·log(1 − p) )</p><p>If the label is 1, the loss is −log p: tiny when p is near 1, enormous when p is near 0. If the label is 0, the roles swap. Averaged over the data:</p></div>
+<div class="tool-table-wrap"><table><thead><tr><th class="num">Label</th><th class="num">Neuron says p</th><th class="num">Loss −log(…)</th><th>Reading</th></tr></thead><tbody><tr><td class="num">1</td><td class="num">0.99</td><td class="num">0.010</td><td>right and confident: almost free</td></tr><tr><td class="num">1</td><td class="num">0.5</td><td class="num">0.693</td><td>a coin toss</td></tr><tr><td class="num">1</td><td class="num">0.01</td><td class="num">4.605</td><td>confidently wrong: very expensive</td></tr></tbody></table></div>
+<div class="callout info"><div class="callout-icon">🔑</div><div class="callout-body"><strong>0.693 is a number to remember</strong><p>It is log 2 — the loss of a model that says 50–50 about everything. A training run that sits at 0.693 has learned nothing. You will see it on Friday, from a neuron that is doing its honest best on a problem it cannot solve.</p></div></div>
+
+<h3>Why not keep squared error?</h3>
+<p>Squared error <em>works</em> through a sigmoid, in the sense that the code runs. The trouble is what happens when the neuron is badly wrong. Take a point with label 1 where the neuron says 0.001. The push each loss gives the score <em>z</em>:</p>
+<div class="code-block"><div class="code-header"><span>the same comparison as Lab 8, task 5</span><span class="code-lang">python</span></div>
+<pre>p, y = <span class="num">0.001</span>, <span class="num">1.0</span>
+push_bce = p - y                         <span class="cm"># cross-entropy through a sigmoid</span>
+push_mse = <span class="num">2</span> * (p - y) * p * (<span class="num">1</span> - p)     <span class="cm"># squared error through a sigmoid</span>
+<span class="fn">print</span>(<span class="fn">round</span>(push_bce, <span class="num">4</span>), <span class="fn">round</span>(push_mse, <span class="num">6</span>))</pre>
+</div>
+<div class="code-block"><div class="code-header"><span>output</span><span class="code-lang shell">output</span></div>
+<pre>-0.999 -0.001996</pre>
+</div>
+<div class="bigidea"><div class="bi-label">The factor that kills learning</div><p class="eq">∂L/∂z = p − y</p><p>Squared error drags in the sigmoid's slope <em>p(1 − p)</em>, which is almost zero exactly when the neuron is most wrong. Cross-entropy's log cancels that factor, and the gradient with respect to the score collapses to something beautifully short:</p></div>
+
+<div class="module-header sky" data-num="4" id="loop">
+  <div class="mod-label">Part 4 · 12 minutes</div>
+  <h2>Training it: Friday's loop, one line different</h2>
+</div>
+<div class="code-block"><div class="code-header"><span>logistic regression from scratch — two features now</span><span class="code-lang">python</span></div>
+<pre>w, b, lr = np.<span class="fn">zeros</span>(<span class="num">2</span>), <span class="num">0.0</span>, <span class="num">0.5</span>
+<span class="kw">for</span> epoch in <span class="fn">range</span>(<span class="num">500</span>):
+    p  = <span class="fn">sigmoid</span>(X @ w + b)        <span class="cm"># the new line</span>
+    dz = p - y                     <span class="cm"># from cross-entropy</span>
+    w -= lr * X.T @ dz / <span class="fn">len</span>(X)    <span class="cm"># same shape of update as Friday</span>
+    b -= lr * dz.<span class="fn">mean</span>()</pre>
+</div>
+<p>Put it beside Friday's loop. The update is the same pattern: error times input, averaged, times the learning rate. What changed is one squash in the forward pass and the loss that produced <code>dz</code>. On Lab 8's forty points this reaches 100% training accuracy and a loss of about 0.012.</p>
+
+<h3>The decision boundary</h3>
+<p>The neuron says <em>yes</em> when p &gt; 0.5, which is exactly when z &gt; 0. So the boundary between the two answers is where <em>w₁x₁ + w₂x₂ + b = 0</em> — and that is the equation of a <strong>straight line</strong>. Solve it for <em>x₂</em> and you can draw it: <em>x₂ = −(w₁x₁ + b)/w₂</em>.</p>
+<div class="bigidea"><div class="bi-label">Hold this for Friday</div><p>A single neuron, however it is trained, can only ever separate its two classes with a straight line (a flat plane, with more features). Everything it learns is <em>where to put that line</em>. On Friday we meet four points where no line will do.</p></div>
+<div class="quiz"><h5>Three questions</h5><p class="q-sub">The third is the one that matters for Friday.</p><button class="rbtn" onclick="tog('r1')">Show the answers</button><div class="reveal" id="r1"><p><strong>Q1. A neuron outputs p = 0.73. What is its score z — positive or negative?</strong> Positive: p &gt; 0.5 exactly when z &gt; 0.</p><p><strong>Q2. The label is 0 and the neuron says p = 0.9. What is dz?</strong> p − y = 0.9. Positive, so the update lowers the score for this point — the right direction.</p><p><strong>Q3. Double every weight and the bias. What happens to the boundary?</strong> Nothing: w₁x₁ + w₂x₂ + b = 0 has the same solutions after multiplying by 2. What changes is how <em>steep</em> the probabilities are near it — the neuron becomes more confident, not more correct. This is why, on separable data, the weights keep growing forever.</p></div></div>
+
+<div class="module-header teal" data-num="5" id="lab">
+  <div class="mod-label">Lab 8 · 20 minutes in class</div>
+  <h2>One neuron, from scratch</h2>
+</div>
+<p>Lab 8 — <code>CSC4315_Lab08_One_Neuron</code>. You write the sigmoid, the loss, the three gradient lines and the boundary. Data and plotting are given.</p>
+
+<h3 id="next">Before Friday</h3>
+<ol><li><strong>Finish Lab 8.</strong></li><li><strong>Without notes:</strong> the sigmoid, its value at 0, the cross-entropy formula, and why <em>p − y</em> is the gradient.</li><li><strong>On paper:</strong> draw four points at the corners of a unit square, labelled 0, 1, 1, 0 going round. Try to draw one line that separates the 1s from the 0s.</li></ol>
+<div class="callout tip"><div class="callout-icon">➡️</div><div class="callout-body"><strong>Session 12 — Friday 16 October, 11:30</strong><p>The perceptron and the wall it hit. A history that nearly ended the field — and the four points from your homework, demonstrated live.</p></div></div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 11 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

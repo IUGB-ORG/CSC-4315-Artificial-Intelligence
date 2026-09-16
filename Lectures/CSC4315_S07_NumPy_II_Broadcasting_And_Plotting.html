@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 7 — NumPy II: Broadcasting and Plotting</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #faf9f6; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fde68a;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 4px 24px rgba(15,14,23,0.08);
+    --card-shadow-hover: 0 12px 40px rgba(15,14,23,0.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  .hero { background: var(--ink); color: var(--paper); padding: 76px 40px 56px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 76% 24%, rgba(13,148,136,0.36) 0%, transparent 58%),
+                radial-gradient(ellipse at 14% 84%, rgba(2,132,199,0.3) 0%, transparent 55%),
+                radial-gradient(ellipse at 94% 94%, rgba(232,168,56,0.22) 0%, transparent 50%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: rgba(232,168,56,0.2); border: 1px solid var(--gold);
+    color: var(--gold-light); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { font-size: 1.12rem; color: rgba(250,249,246,0.78); max-width: 660px; margin-bottom: 32px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--paper); padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.1); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; }
+  .toc a { color: rgba(250,249,246,0.65); text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    padding: 14px 15px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  .module-header { margin: 56px 0 28px; padding: 30px 34px; border-radius: 16px; position: relative; overflow: hidden; }
+  .module-header.teal { background: var(--teal); }
+  .module-header.violet { background: var(--violet); }
+  .module-header.gold { background: #92400e; }
+  .module-header.sky { background: #075985; }
+  .module-header.rose { background: #9f1239; }
+  .module-header.ink { background: var(--ink); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', serif; font-size: 5rem;
+    font-weight: 900; color: rgba(255,255,255,0.12); line-height: 1; }
+  .module-header .mod-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .module-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+    color: #fff; line-height: 1.2; }
+  .module-header p { color: rgba(255,255,255,0.82); margin-top: 8px; font-size: 0.97rem; max-width: 620px; }
+
+  h3 { font-family: 'Playfair Display', serif; font-size: 1.32rem; font-weight: 700; margin: 38px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    box-shadow: var(--card-shadow); transition: box-shadow 0.25s, transform 0.25s; }
+  .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-3px); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 14px; box-shadow: var(--card-shadow); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--ink); color: var(--paper); }
+  thead th { padding: 13px 15px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 12px 15px; font-size: 0.88rem; vertical-align: top; }
+  tbody tr:hover { background: var(--cream); }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip { background: var(--teal-light); border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3; border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light); border-left: 4px solid var(--sky); }
+  .callout.try { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light); border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body strong { display: block; margin-bottom: 4px; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: var(--gold-light); border: 1px solid #d9a441; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 24px 28px; margin: 28px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.05rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+  .bigidea p + p { margin-top: 12px; }
+
+  .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 18px 0; box-shadow: var(--card-shadow); }
+  .code-header { background: #2a2a3d; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .code-header span { color: rgba(255,255,255,0.55); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal); color: #fff; font-size: 0.7rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .code-lang.shell { background: var(--slate); }
+  .code-lang.bad { background: var(--rose); }
+  pre { padding: 20px 22px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; line-height: 1.65; color: #cdd6f4; }
+  .kw { color: #cba6f7; } .str { color: #a6e3a1; } .cm { color: #6c7086; font-style: italic; }
+  .fn { color: #89b4fa; } .num { color: #fab387; } .var { color: #f38ba8; } .out { color: #f9e2af; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    margin: 24px 0; box-shadow: var(--card-shadow); overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  .step-list { list-style: none; margin: 16px 0; }
+  .step-list li { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; flex-shrink: 0; }
+  .step-text strong { display: block; margin-bottom: 3px; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 16px; margin: 26px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center;
+    box-shadow: var(--card-shadow); }
+  .stat .big { font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.05; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--slate); margin-top: 8px; }
+  .stat.alert .big { color: var(--rose); }
+  .stat.good .big { color: var(--teal); }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 2px 6px; border-radius: 5px; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px;
+    margin: 18px 0; box-shadow: var(--card-shadow); }
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 14px; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 1800px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .rbtn { background: var(--ink); color: var(--paper); border: none; border-radius: 100px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; }
+  .rbtn:hover { background: var(--teal); }
+
+  footer { background: var(--ink); color: rgba(250,249,246,0.55); text-align: center;
+    padding: 32px 20px; font-size: 0.85rem; margin-top: 60px; }
+  footer strong { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 48px 20px 40px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ════ light format (applied Sept 2026): overrides the dark theme above ════ */
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 7 · Tuesday 29 September 2026</div>
+    <h1>NumPy II:<br><em>broadcasting, and plotting what you compute</em></h1>
+    <p class="lead">Two arrays of different shapes are allowed to work together — under two rules that are entirely mechanical, and that produce the one bug in this course capable of giving you a wrong answer without any error at all. Then Matplotlib, so that from Friday onward we can look at a curve instead of describing one.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 1 · Foundations</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 4 · vectorise and plot</span>
+      <span class="tag">Laptops open</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#recap">Where we are</a>
+  <a href="#broadcast">Broadcasting</a>
+  <a href="#silent">The silent bug</a>
+  <a href="#plot">Plotting</a>
+  <a href="#curve">A curve, end to end</a>
+  <a href="#lab">Lab 4</a>
+  <a href="#next">Before Friday</a>
+</div></nav>
+
+<div class="page">
+
+<h3 id="recap">Where we are</h3>
+
+<p>On Friday an array became a thing with a shape, and <code>.shape</code> became the first thing you print. Today that pays off twice: once because broadcasting is a rule about shapes and nothing else, and once because the nastiest bug in NumPy is a shape you did not notice.</p>
+
+<p>One number from Lab 3 worth repeating. Most of the room got somewhere between five and eight of the ten shape predictions right. That is the correct score for week two, and it is also why we spend today on the rule that governs what happens when shapes do not match.</p>
+<!-- ══════════════════════════ BROADCASTING ══════════════════════════ -->
+<div class="module-header violet" data-num="1" id="broadcast">
+  <div class="mod-label">Part 1 · 18 minutes</div>
+  <h2>Broadcasting — two rules, and you can predict every result</h2>
+  <p>The most powerful and most dangerous feature in NumPy. It is also, mercifully, completely mechanical.</p>
+</div>
+
+<p>You have already used it. <code>a + 10</code> adds a single number to a whole array — the 10 was <em>broadcast</em> across every element. The general rule extends that to arrays of different shapes.</p>
+
+<div class="bigidea">
+  <div class="bi-label">The algorithm — apply it in this order, every time</div>
+  <p><strong>1. Line the shapes up from the right.</strong> If one is shorter, pad it on the <em>left</em> with 1s.</p>
+  <p><strong>2. In each column, the two sizes must be equal, or one of them must be 1.</strong> A 1 is stretched to match. Anything else is an error.</p>
+</div>
+
+<div class="diagram-wrap">
+<div class="diagram-title">Line up from the right — three worked cases</div>
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  <g font-family="JetBrains Mono" font-size="14">
+    <!-- case 1 -->
+    <text x="20" y="34" font-family="DM Sans" font-size="12.5" font-weight="600" fill="#166534">WORKS — the 4 matches, the missing row-count is padded to 1 and stretched</text>
+    <text x="30"  y="62" fill="#0f0e17">X</text><text x="60" y="62" fill="#475569">(3, 4)</text>
+    <rect x="150" y="46" width="60" height="24" rx="5" fill="#dcfce7" stroke="#16a34a"/><text x="180" y="63" text-anchor="middle" fill="#166534">3</text>
+    <rect x="216" y="46" width="60" height="24" rx="5" fill="#dcfce7" stroke="#16a34a"/><text x="246" y="63" text-anchor="middle" fill="#166534">4</text>
+    <text x="30"  y="94" fill="#0f0e17">b</text><text x="60" y="94" fill="#475569">(4,)</text>
+    <rect x="150" y="78" width="60" height="24" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="3,3"/><text x="180" y="95" text-anchor="middle" fill="#64748b">1</text>
+    <rect x="216" y="78" width="60" height="24" rx="5" fill="#dcfce7" stroke="#16a34a"/><text x="246" y="95" text-anchor="middle" fill="#166534">4</text>
+    <text x="300" y="80" fill="#166534" font-family="DM Sans" font-size="13" font-weight="600">→ result (3, 4)</text>
+    <text x="470" y="80" fill="#475569" font-family="DM Sans" font-size="12">one bias per column, added to every row</text>
+
+    <!-- case 2 -->
+    <text x="20" y="146" font-family="DM Sans" font-size="12.5" font-weight="600" fill="#166534">WORKS — the explicit 1 is stretched across all four columns</text>
+    <text x="30"  y="174" fill="#0f0e17">X</text><text x="60" y="174" fill="#475569">(3, 4)</text>
+    <rect x="150" y="158" width="60" height="24" rx="5" fill="#dcfce7" stroke="#16a34a"/><text x="180" y="175" text-anchor="middle" fill="#166534">3</text>
+    <rect x="216" y="158" width="60" height="24" rx="5" fill="#dcfce7" stroke="#16a34a"/><text x="246" y="175" text-anchor="middle" fill="#166534">4</text>
+    <text x="30"  y="206" fill="#0f0e17">c</text><text x="60" y="206" fill="#475569">(3, 1)</text>
+    <rect x="150" y="190" width="60" height="24" rx="5" fill="#dcfce7" stroke="#16a34a"/><text x="180" y="207" text-anchor="middle" fill="#166534">3</text>
+    <rect x="216" y="190" width="60" height="24" rx="5" fill="#fef9c3" stroke="#ca8a04"/><text x="246" y="207" text-anchor="middle" fill="#854d0e">1</text>
+    <text x="300" y="192" fill="#166534" font-family="DM Sans" font-size="13" font-weight="600">→ result (3, 4)</text>
+    <text x="470" y="192" fill="#475569" font-family="DM Sans" font-size="12">one value per row, added across</text>
+
+    <!-- case 3 -->
+    <text x="20" y="258" font-family="DM Sans" font-size="12.5" font-weight="600" fill="#9f1239">FAILS — 4 and 3 are neither equal nor 1</text>
+    <text x="30"  y="286" fill="#0f0e17">X</text><text x="60" y="286" fill="#475569">(3, 4)</text>
+    <rect x="150" y="270" width="60" height="24" rx="5" fill="#dcfce7" stroke="#16a34a"/><text x="180" y="287" text-anchor="middle" fill="#166534">3</text>
+    <rect x="216" y="270" width="60" height="24" rx="5" fill="#ffe4e6" stroke="#e11d48"/><text x="246" y="287" text-anchor="middle" fill="#9f1239">4</text>
+    <text x="330" y="286" fill="#475569">d (3,) →</text>
+    <rect x="420" y="270" width="60" height="24" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="3,3"/><text x="450" y="287" text-anchor="middle" fill="#64748b">1</text>
+    <rect x="486" y="270" width="60" height="24" rx="5" fill="#ffe4e6" stroke="#e11d48"/><text x="516" y="287" text-anchor="middle" fill="#9f1239">3</text>
+    <text x="570" y="287" fill="#9f1239" font-family="DM Sans" font-size="13" font-weight="600">4 ≠ 3, neither is 1</text>
+  </g>
+</svg>
+</div>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th class="mono">Shape A</th><th class="mono">Shape B</th><th class="mono">Result</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">(3, 4)</td><td class="mono">(4,)</td><td class="mono ok">(3, 4)</td><td>Padded to (1,4); the 1 stretches to 3.</td></tr>
+    <tr><td class="mono">(3, 4)</td><td class="mono">(3, 1)</td><td class="mono ok">(3, 4)</td><td>Explicit 1 stretches to 4.</td></tr>
+    <tr><td class="mono">(3, 1)</td><td class="mono">(1, 4)</td><td class="mono ok">(3, 4)</td><td>Both stretch. This is the one that surprises people.</td></tr>
+    <tr><td class="mono">(3, 4)</td><td class="mono">(3,)</td><td class="mono bad">ERROR</td><td>Padded to (1,3). Rightmost column: 4 vs 3. No.</td></tr>
+    <tr><td class="mono">(3,)</td><td class="mono">(4,)</td><td class="mono bad">ERROR</td><td>3 vs 4, neither is 1.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>the error you will see more than any other this semester</span><span class="code-lang bad">error</span></div>
+<pre>np.<span class="fn">array</span>([<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>]) + np.<span class="fn">array</span>([<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>])
+
+<span class="err">ValueError: operands could not be broadcast together
+            with shapes (3,) (4,)</span></pre>
+</div>
+
+<p>Read it as a gift. NumPy has told you both shapes and where they disagree. Nine times in ten the fix is a <code>.reshape(-1, 1)</code> or a transpose, and the diagnosis takes ten seconds once you trust the message.</p>
+
+
+<!-- ══════════════════════════ SILENT ══════════════════════════ -->
+<div class="module-header rose" data-num="2" id="silent">
+  <div class="mod-label">Part 2 · 10 minutes · the important part of today</div>
+  <h2>The bug that does not raise an error</h2>
+  <p>An error is a good day. This is the other kind.</p>
+</div>
+
+<p>You have three predictions and three true values. You want the mean squared error. The predictions came out of one calculation and the targets came from a column of a table — a completely ordinary situation, and one you will be in during session 10.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>predict the output. do not scroll.</span><span class="code-lang">python</span></div>
+<pre>p = np.<span class="fn">array</span>([<span class="num">1.</span>, <span class="num">2.</span>, <span class="num">3.</span>])          <span class="cm"># predictions       shape (3,)</span>
+t = np.<span class="fn">array</span>([[<span class="num">1.</span>], [<span class="num">2.</span>], [<span class="num">3.</span>]])     <span class="cm"># targets           shape (3, 1)</span>
+
+mse = ((p - t) ** <span class="num">2</span>).<span class="fn">mean</span>()
+<span class="fn">print</span>(mse)</pre>
+</div>
+
+<div class="quiz">
+  <h5>The predictions are exactly correct. What does it print?</h5>
+  <p class="q-sub">Every prediction matches its target perfectly. Commit to an answer.</p>
+  <button class="rbtn" onclick="tog('r1')">Show what actually happens</button>
+  <div class="reveal" id="r1">
+    <p>It prints <strong>1.3333333333333333</strong>. The predictions are perfect and the loss is not zero.</p>
+    <p><strong>Why.</strong> <code>p</code> is <code>(3,)</code>, padded to <code>(1, 3)</code>. <code>t</code> is <code>(3, 1)</code>. Both have a 1, so both stretch — and the result is a <code>(3, 3)</code> matrix of <em>every prediction minus every target</em>:</p>
+    <p class="mono" style="background:#fff;padding:10px;border-radius:8px">[[ 0.&nbsp; 1.&nbsp; 2.]<br>&nbsp;[-1.&nbsp; 0.&nbsp; 1.]<br>&nbsp;[-2. -1.&nbsp; 0.]]</p>
+    <p>The diagonal is the answer you wanted — all zeros. The other six entries are comparisons between unrelated pairs, and the mean is taken over all nine. NumPy did nothing wrong. Row three of the broadcasting table says <code>(1,3)</code> and <code>(3,1)</code> combine to <code>(3,3)</code>, and that is exactly what happened.</p>
+    <p><strong>The fix — either one:</strong></p>
+    <p class="mono" style="background:#fff;padding:10px;border-radius:8px">((p - t.ravel()) ** 2).mean()&nbsp;&nbsp;# 0.0 — flatten t to (3,)<br>((p[:, None] - t) ** 2).mean()&nbsp;# 0.0 — lift p to (3, 1)</p>
+    <p>Both give 0.0. The rule is to make the two shapes agree <em>before</em> the arithmetic, not to hope.</p>
+  </div>
+</div>
+
+<div class="callout stop">
+  <div class="callout-icon">🚨</div>
+  <div class="callout-body">
+    <strong>Why I am spending ten minutes on one bug</strong>
+    <p>A model that will not train is usually this. Your loss is a number, so nothing crashes; it goes down, so nothing looks wrong; it plateaus somewhere useless and you spend two days changing the learning rate. In session 16 several of you will hit exactly this, and I would rather you recognise the smell than rediscover it.</p>
+    <p><strong>The habit:</strong> print <code>.shape</code> on both sides before any operation you are unsure of. It costs one line and it is the single most effective debugging technique in this entire course.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ PLOT ══════════════════════════ -->
+<div class="module-header gold" data-num="3" id="plot">
+  <div class="mod-label">Part 3 · 16 minutes</div>
+  <h2>Three plots, and no more than three</h2>
+  <p>Matplotlib is enormous. This course uses a small corner of it, and you will use that corner in almost every session from Friday to December.</p>
+</div>
+
+<p>The reason to learn this today rather than later is simple: from session 9 onward, nearly every claim in this course is a claim about a curve. A loss that goes down. A learning rate that is too large. A model that fits the training data and not the test data. Describing those in words is a poor substitute for looking at them, and looking at them costs three lines.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>the import, and the only two lines that always appear</span><span class="code-lang">python</span></div>
+<pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+x = np.<span class="fn">linspace</span>(-<span class="num">3</span>, <span class="num">3</span>, <span class="num">200</span>)   <span class="cm"># 200 evenly spaced numbers from -3 to 3</span>
+y = x ** <span class="num">2</span>
+
+plt.<span class="fn">plot</span>(x, y)
+plt.<span class="fn">show</span>()</pre>
+</div>
+
+<p><code>np.linspace(a, b, n)</code> is the function you will reach for constantly: <em>n</em> evenly spaced values from <em>a</em> to <em>b</em>, endpoints included. Compare it with the comprehension you wrote last Tuesday — <code>[i/10 for i in range(-30, 31)]</code> — and you have the whole argument for NumPy in one line again.</p>
+
+<h3>Plot one — the line, for anything that changes</h3>
+
+<div class="code-block">
+  <div class="code-header"><span>this is the plot you will draw most often all term</span><span class="code-lang">python</span></div>
+<pre>epochs = np.<span class="fn">arange</span>(<span class="num">1</span>, <span class="num">21</span>)
+loss   = <span class="num">2.0</span> * np.<span class="fn">exp</span>(-<span class="num">0.2</span> * epochs)     <span class="cm"># a plausible training curve</span>
+
+plt.<span class="fn">plot</span>(epochs, loss, marker=<span class="str">"o"</span>)
+plt.<span class="fn">xlabel</span>(<span class="str">"epoch"</span>)
+plt.<span class="fn">ylabel</span>(<span class="str">"loss"</span>)
+plt.<span class="fn">title</span>(<span class="str">"training loss"</span>)
+plt.<span class="fn">grid</span>(<span class="kw">True</span>)
+plt.<span class="fn">show</span>()</pre>
+</div>
+
+<div class="callout stop">
+  <div class="callout-icon">🏷️</div>
+  <div class="callout-body">
+    <strong>An unlabelled axis is a wrong plot</strong>
+    <p>In this course a figure without <code>xlabel</code> and <code>ylabel</code> is incomplete, and in the midterm it loses marks. This is not fussiness. A loss curve and an accuracy curve look identical and mean opposite things — one going up is good news and the other is a disaster. The label is what carries the meaning.</p>
+  </div>
+</div>
+
+<h3>Plot two — the scatter, for data points</h3>
+
+<div class="code-block">
+  <div class="code-header"><span>every dataset in unit 2 gets looked at this way first</span><span class="code-lang">python</span></div>
+<pre>rng = np.random.<span class="fn">default_rng</span>(<span class="num">0</span>)          <span class="cm"># seed 0 — everyone gets the same points</span>
+hours  = rng.<span class="fn">uniform</span>(<span class="num">0</span>, <span class="num">10</span>, <span class="num">30</span>)
+scores = <span class="num">8</span> * hours + rng.<span class="fn">normal</span>(<span class="num">0</span>, <span class="num">6</span>, <span class="num">30</span>)   <span class="cm"># a trend, plus noise</span>
+
+plt.<span class="fn">scatter</span>(hours, scores)
+plt.<span class="fn">xlabel</span>(<span class="str">"hours studied"</span>)
+plt.<span class="fn">ylabel</span>(<span class="str">"exam score"</span>)
+plt.<span class="fn">show</span>()</pre>
+</div>
+
+<p>Thirty points, an obvious upward trend, and no line through them yet. In session 10 you will put that line there twice — once solved exactly, once learned by descent — and this scatter is the picture you will put it on.</p>
+
+<h3>Plot three — two things on one pair of axes</h3>
+
+<div class="code-block">
+  <div class="code-header"><span>the comparison plot: data against model, or train against test</span><span class="code-lang">python</span></div>
+<pre>plt.<span class="fn">scatter</span>(hours, scores, label=<span class="str">"data"</span>)
+plt.<span class="fn">plot</span>(hours, <span class="num">8</span> * hours, color=<span class="str">"red"</span>, label=<span class="str">"model"</span>)
+plt.<span class="fn">xlabel</span>(<span class="str">"hours studied"</span>)
+plt.<span class="fn">ylabel</span>(<span class="str">"exam score"</span>)
+plt.<span class="fn">legend</span>()
+plt.<span class="fn">show</span>()</pre>
+</div>
+
+<p>Two calls before one <code>show</code> put both on the same axes. Add <code>label=</code> to each and call <code>legend()</code>, or the reader has to guess which is which. In session 22 this exact plot — two curves, one legend — is how overfitting is diagnosed.</p>
+
+<div class="callout info">
+  <div class="callout-icon">🧭</div>
+  <div class="callout-body">
+    <strong>That is the whole of it</strong>
+    <p><code>plot</code>, <code>scatter</code>, labels, <code>legend</code>, <code>show</code>. There is a great deal more in Matplotlib and you will not need it. When you eventually do — a second panel, a log axis — look it up then, having a reason.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ CURVE ══════════════════════════ -->
+<div class="module-header ink" data-num="4" id="curve">
+  <div class="mod-label">Part 4 · 6 minutes</div>
+  <h2>Everything so far, in six lines</h2>
+</div>
+
+<p>An array, a broadcast, and a picture. This is a rehearsal for session 9, where the same six lines draw a loss surface and you find its lowest point by hand.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>run this — it is session 9 in miniature</span><span class="code-lang">python</span></div>
+<pre>w = np.<span class="fn">linspace</span>(-<span class="num">2</span>, <span class="num">4</span>, <span class="num">200</span>)      <span class="cm"># 200 candidate values of a weight</span>
+loss = (w - <span class="num">1.5</span>) ** <span class="num">2</span> + <span class="num">0.5</span>       <span class="cm"># the error each one would give</span>
+
+plt.<span class="fn">plot</span>(w, loss)
+plt.<span class="fn">xlabel</span>(<span class="str">"weight"</span>)
+plt.<span class="fn">ylabel</span>(<span class="str">"loss"</span>)
+plt.<span class="fn">show</span>()
+
+<span class="fn">print</span>(w[loss.<span class="fn">argmin</span>()])          <span class="cm"># 1.497... — the best weight, found by looking</span></pre>
+</div>
+
+<p><code>argmin</code> gives the <em>position</em> of the smallest value, which you then use to index back into <code>w</code>. Notice what happened: you found the best weight by trying two hundred of them and picking the winner. That works here because there is one weight. In session 13 there are thirteen, and in a real network there are millions — which is precisely why session 9 exists.</p>
+
+<div class="bigidea">
+  <div class="bi-label">The last of the tools</div>
+  <p>Unit 1 has two sessions left and they are both mathematics rather than programming. You now have everything you need to write it: arrays with shapes, arithmetic without loops, broadcasting, and a way to look at any number you compute. From here the difficulty stops being the language and starts being the ideas — which is the right way round.</p>
+</div>
+
+<!-- ══════════════════════════ LAB ══════════════════════════ -->
+<div class="module-header teal" data-num="5" id="lab">
+  <div class="mod-label">Lab 4 · 16 minutes in class</div>
+  <h2>Vectorise five loops, time both, and draw one curve</h2>
+</div>
+
+<p>Lab 4 is a separate handout — <code>CSC4315_Lab04_Vectorise_And_Plot.html</code>. Five jobs written twice, once as a loop and once as an array operation, timed on your own machine so the speed-up is a number you measured rather than one I claimed. Then one plot, with labels.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">✅</div>
+  <div class="callout-body">
+    <strong>Same rules</strong>
+    <p>Finish in the room, hand up after three minutes, nothing here is a prerequisite for Friday.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ NEXT ══════════════════════════ -->
+<h3 id="next">Before Friday</h3>
+
+<ol>
+  <li><strong>Finish Lab 4</strong>, and write your own timing ratio at the top of the page. Bring that number.</li>
+  <li><strong>Redraw the loss curve from part 4</strong> with a different minimum — put it at <code>w = -0.5</code> instead of 1.5 — and confirm <code>argmin</code> finds it. Two minutes, and it makes Friday's session concrete before it starts.</li>
+  <li><strong>If broadcasting still feels like magic</strong>, take the three worked cases from part 1 and do two more of your own on paper: line the shapes up from the right and apply the two rules. This is the one topic where five minutes of paper beats an hour of reading.</li>
+</ol>
+
+<div class="callout tip">
+  <div class="callout-icon">➡️</div>
+  <div class="callout-body">
+    <strong>Session 8 — Friday 02 October, 11:30</strong>
+    <p><em>The layer is a matrix multiply.</em> The reveal the whole unit has been building to: <code>X @ W + b</code> — three symbols you can now read individually — is one complete layer of a neural network. You will compute a 2 × 3 layer by hand on paper, then in one line of NumPy, and check that the two agree digit by digit.</p>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 7 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

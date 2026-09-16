@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 19 — What you gain, and when training fails</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 19 · Tuesday 10 November 2026</div>
+    <h1>What you gain,<br><em>and when training fails</em></h1>
+    <p class="lead">The first half is what a framework gives you beyond the gradients: better optimisers, sensible starting weights, and a GPU. The second half is the practical skill that matters more — a network that runs without errors and learns nothing, and how to read the evidence until you find the one line responsible.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 3 · Libraries</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 13 · four broken scripts</span>
+      <span class="tag">Compressible: Part 1 can move to reading</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#gain">What you gain</a>
+  <a href="#evidence">Four signatures</a>
+  <a href="#live">Live diagnosis</a>
+  <a href="#lab">Lab 13</a>
+  <a href="#next">Before Friday</a>
+</div></nav>
+
+<div class="page">
+
+<div class="module-header ink" data-num="1" id="gain">
+  <div class="mod-label">Part 1 · 30 minutes · compressible to reading</div>
+  <h2>What the frameworks give you</h2>
+  <p>Autograd you met on Friday. Three more.</p>
+</div>
+
+<h3>Optimisers: from plain SGD to Adam</h3>
+<p>Your update moves every parameter by the same multiple of its gradient. That has two weaknesses: on a narrow valley the walk zig-zags across it, and one learning rate must suit every parameter at once — the problem from Lab 6's two-dimensional extension.</p>
+<div class="tool-table-wrap"><table><thead><tr><th>Optimiser</th><th>The idea</th><th>Update, in words</th></tr></thead><tbody><tr><td>SGD</td><td>step down the current slope</td><td><code>θ ← θ − η·g</code></td></tr><tr><td>Momentum</td><td>keep a running velocity, so consistent directions speed up and zig-zags cancel</td><td><code>v ← 0.9·v + g;  θ ← θ − η·v</code></td></tr><tr><td>Adam</td><td>momentum, plus a per-parameter step size scaled by how large that parameter's gradients usually are</td><td><code>θ ← θ − η·m̂ / (√v̂ + ε)</code></td></tr></tbody></table></div>
+<p>Adam is the default in most frameworks because it tolerates a badly chosen learning rate and badly scaled parameters. It is not magic: on a small, well-conditioned problem a carefully tuned plain SGD often does as well or better. Its value is robustness when you cannot tune everything.</p>
+
+<h3>Initialisation</h3>
+<p>Starting weights matter more than they look. All zeros makes every hidden neuron compute the same thing forever — the symmetry never breaks. Weights too large push sigmoids into their flat ends, where the slope is almost zero. Frameworks scale the random starting weights to each layer's width: <strong>Glorot</strong> initialisation for sigmoid and tanh, <strong>He</strong> initialisation for ReLU.</p>
+
+<h3>The GPU</h3>
+<p>Training is dominated by matrix multiplication, and a GPU performs thousands of multiply-adds in parallel. For the 64–16–1 network the CPU is faster, because copying data to the GPU costs more than the arithmetic. For session 23's image network the GPU wins by a wide margin. <code>model.to("cuda")</code> is the whole change in PyTorch — once the data is moved too.</p>
+
+<div class="module-header teal" data-num="2" id="evidence">
+  <div class="mod-label">Part 2 · 15 minutes</div>
+  <h2>Reading a loss curve like evidence</h2>
+  <p>Four signatures cover most failures you will meet this year.</p>
+</div>
+<div class="diagram-wrap"><div class="diagram-title">Four loss curves from Lab 13 — sketched, not to scale</div>
+<svg viewBox="0 0 705 185" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto"><defs><marker id="ah" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#475569"/></marker></defs><rect x="10" y="20" width="160" height="130" rx="10" fill="#fff" stroke="#e2e0da" stroke-width="1.5"/><line x1="28" y1="130" x2="160" y2="130" stroke="#94a3b8" stroke-width="1.5"/><line x1="28" y1="30" x2="28" y2="130" stroke="#94a3b8" stroke-width="1.5"/><polyline fill="none" stroke="#e11d48" stroke-width="2.5" points="28,92 47,35 65,73 84,44 102,82 121,35 139,54 158,40"/><text x="90" y="172" font-size="12.5" fill="#0f0e17" text-anchor="middle" font-weight="600" >jumps and explodes</text><rect x="185" y="20" width="160" height="130" rx="10" fill="#fff" stroke="#e2e0da" stroke-width="1.5"/><line x1="203" y1="130" x2="335" y2="130" stroke="#94a3b8" stroke-width="1.5"/><line x1="203" y1="30" x2="203" y2="130" stroke="#94a3b8" stroke-width="1.5"/><polyline fill="none" stroke="#b45309" stroke-width="2.5" points="203,87 222,111 240,97 259,106 277,92 296,103 314,102 333,100"/><text x="265" y="172" font-size="12.5" fill="#0f0e17" text-anchor="middle" font-weight="600" >stalls and stutters</text><rect x="360" y="20" width="160" height="130" rx="10" fill="#fff" stroke="#e2e0da" stroke-width="1.5"/><line x1="378" y1="130" x2="510" y2="130" stroke="#94a3b8" stroke-width="1.5"/><line x1="378" y1="30" x2="378" y2="130" stroke="#94a3b8" stroke-width="1.5"/><polyline fill="none" stroke="#475569" stroke-width="2.5" points="378,82 397,82 415,82 434,82 452,82 471,82 489,82 508,82"/><text x="440" y="172" font-size="12.5" fill="#0f0e17" text-anchor="middle" font-weight="600" >flat at 0.693</text><rect x="535" y="20" width="160" height="130" rx="10" fill="#fff" stroke="#e2e0da" stroke-width="1.5"/><line x1="553" y1="130" x2="685" y2="130" stroke="#94a3b8" stroke-width="1.5"/><line x1="553" y1="30" x2="553" y2="130" stroke="#94a3b8" stroke-width="1.5"/><polyline fill="none" stroke="#7c3aed" stroke-width="2.5" points="553,78 572,81 590,81 609,82 627,82 646,82 664,82 683,82"/><text x="615" y="172" font-size="12.5" fill="#0f0e17" text-anchor="middle" font-weight="600" >falls a little, no skill</text></svg>
+</div>
+<div class="tool-table-wrap"><table><thead><tr><th>Signature</th><th>Usual cause</th><th>First thing to print</th></tr></thead><tbody><tr><td>Loss jumps, grows, or becomes <code>nan</code></td><td>learning rate far too large</td><td>the loss for the first five steps</td></tr><tr><td>Loss falls then stutters; accuracy well below what it should be</td><td>inputs on very different or very large scales</td><td><code>X.min()</code>, <code>X.max()</code>, <code>X.std(axis=0)</code></td></tr><tr><td>Loss flat at exactly 0.693 from the first epoch</td><td>no gradient reaches the weights — dead or saturated units</td><td>the share of hidden activations above zero</td></tr><tr><td>Loss hardly moves; test accuracy near the baseline</td><td>labels do not match inputs</td><td>a few images next to their labels</td></tr></tbody></table></div>
+
+<div class="module-header violet" data-num="3" id="live">
+  <div class="mod-label">Part 3 · 20 minutes · live</div>
+  <h2>Four broken scripts, diagnosed at the front</h2>
+  <p>Each runs without an error. Each has one wrong line.</p>
+</div>
+<p>The healthy reference — Lab 11's network, 30 epochs — ends with a loss of 0.056 and 96.2% test accuracy. Keep those numbers on the board.</p>
+<div class="step-list"><div class="step-num">1</div><div class="step-text"><strong>The learning rate.</strong> η = 50. First-epoch loss 14.0; after thirty epochs still 7.8; test accuracy 53%. The fix is one number: η = 1.0. Lesson: huge losses that bounce mean the step is overshooting the valley, exactly as on the <em>x²</em> curve in session 9.</div><div class="step-num">2</div><div class="step-text"><strong>The scale.</strong> Raw pixels, 0 to 16, with the learning rate tuned for 0 to 1. The loss drops to 0.26 then jumps back to 0.9; test accuracy 82%. The step on each weight is sixteen times larger than intended. The fix is <code>/ 16.0</code>. Lesson: scale inputs before you tune anything else.</div><div class="step-num">3</div><div class="step-text"><strong>The dead layer.</strong> ReLU hidden units started with a bias of −3. Every hidden activation is zero, the share above zero prints <code>0.0</code>, the loss sits at 0.693 and never moves. A ReLU with a negative input has slope zero, so no gradient flows back through it — ever. The fix: start biases at 0 (He initialisation for the weights). With it, 97.3%.</div><div class="step-num">4</div><div class="step-text"><strong>The labels.</strong> "Shuffle the training set" — applied to <code>X</code> only. Loss 0.74 to 0.70; test accuracy 54%. The network is faithfully learning images paired with random labels. The fix shuffles both with the same index: 96.9%.</div></div>
+<div class="bigidea"><div class="bi-label">The debugging habit</div><p><strong>Symptom, then hypothesis, then one print, then one change.</strong> Never change two things at once, and never change anything before printing something that could prove your hypothesis wrong. The scripts in Lab 13 are small so that the habit, not the code, is what you practise.</p></div>
+<div class="callout info"><div class="callout-icon">🔍</div><div class="callout-body"><strong>Why sigmoid did not die in script 3</strong><p>A sigmoid with a negative input is small but its slope is not zero — gradient still trickles through. ReLU's slope is exactly zero for every negative input, which is why "dead ReLUs" are a ReLU problem specifically. Lab 13's extension A lets you confirm it.</p></div></div>
+
+<div class="module-header teal" data-num="4" id="lab">
+  <div class="mod-label">Lab 13 · 22 minutes in class</div>
+  <h2>Four broken training scripts</h2>
+</div>
+<p>Lab 13 — <code>CSC4315_Lab13_Four_Broken_Scripts</code>. You have just watched the diagnosis; now do it yourself, one line changed per script, with the evidence written down: symptom, line, why the fix works.</p>
+
+<h3 id="next">Before Friday</h3>
+<ol><li><strong>Finish Lab 13.</strong></li><li><strong>Unit 3 ends here.</strong> Without notes: what autograd replaces, what Adam adds to SGD, why initialisation matters, and the first print for each of the four signatures.</li></ol>
+<div class="callout tip"><div class="callout-icon">➡️</div><div class="callout-body"><strong>Session 20 — Friday 13 November, 11:30</strong><p>Unit 4 begins: data that fights back. A real, messy table — missing values, categories, scales — and a test score that lies because of one column.</p></div></div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 19 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

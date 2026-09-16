@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 4 — Python I: Values, Functions, and the Loop</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #faf9f6; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fde68a;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 4px 24px rgba(15,14,23,0.08);
+    --card-shadow-hover: 0 12px 40px rgba(15,14,23,0.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  .hero { background: var(--ink); color: var(--paper); padding: 76px 40px 56px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 76% 24%, rgba(13,148,136,0.36) 0%, transparent 58%),
+                radial-gradient(ellipse at 14% 84%, rgba(2,132,199,0.3) 0%, transparent 55%),
+                radial-gradient(ellipse at 94% 94%, rgba(232,168,56,0.22) 0%, transparent 50%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: rgba(232,168,56,0.2); border: 1px solid var(--gold);
+    color: var(--gold-light); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { font-size: 1.12rem; color: rgba(250,249,246,0.78); max-width: 660px; margin-bottom: 32px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--paper); padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.1); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; }
+  .toc a { color: rgba(250,249,246,0.65); text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    padding: 14px 15px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  .module-header { margin: 56px 0 28px; padding: 30px 34px; border-radius: 16px; position: relative; overflow: hidden; }
+  .module-header.teal { background: var(--teal); }
+  .module-header.violet { background: var(--violet); }
+  .module-header.gold { background: #92400e; }
+  .module-header.sky { background: #075985; }
+  .module-header.rose { background: #9f1239; }
+  .module-header.ink { background: var(--ink); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', serif; font-size: 5rem;
+    font-weight: 900; color: rgba(255,255,255,0.12); line-height: 1; }
+  .module-header .mod-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .module-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+    color: #fff; line-height: 1.2; }
+  .module-header p { color: rgba(255,255,255,0.82); margin-top: 8px; font-size: 0.97rem; max-width: 620px; }
+
+  h3 { font-family: 'Playfair Display', serif; font-size: 1.32rem; font-weight: 700; margin: 38px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    box-shadow: var(--card-shadow); transition: box-shadow 0.25s, transform 0.25s; }
+  .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-3px); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 14px; box-shadow: var(--card-shadow); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--ink); color: var(--paper); }
+  thead th { padding: 13px 15px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 12px 15px; font-size: 0.88rem; vertical-align: top; }
+  tbody tr:hover { background: var(--cream); }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip { background: var(--teal-light); border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3; border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light); border-left: 4px solid var(--sky); }
+  .callout.try { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light); border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body strong { display: block; margin-bottom: 4px; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: var(--gold-light); border: 1px solid #d9a441; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 24px 28px; margin: 28px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.05rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+  .bigidea p + p { margin-top: 12px; }
+
+  .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 18px 0; box-shadow: var(--card-shadow); }
+  .code-header { background: #2a2a3d; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .code-header span { color: rgba(255,255,255,0.55); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal); color: #fff; font-size: 0.7rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .code-lang.shell { background: var(--slate); }
+  .code-lang.bad { background: var(--rose); }
+  pre { padding: 20px 22px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; line-height: 1.65; color: #cdd6f4; }
+  .kw { color: #cba6f7; } .str { color: #a6e3a1; } .cm { color: #6c7086; font-style: italic; }
+  .fn { color: #89b4fa; } .num { color: #fab387; } .var { color: #f38ba8; } .out { color: #f9e2af; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    margin: 24px 0; box-shadow: var(--card-shadow); overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  .step-list { list-style: none; margin: 16px 0; }
+  .step-list li { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; flex-shrink: 0; }
+  .step-text strong { display: block; margin-bottom: 3px; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 16px; margin: 26px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center;
+    box-shadow: var(--card-shadow); }
+  .stat .big { font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.05; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--slate); margin-top: 8px; }
+  .stat.alert .big { color: var(--rose); }
+  .stat.good .big { color: var(--teal); }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 2px 6px; border-radius: 5px; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px;
+    margin: 18px 0; box-shadow: var(--card-shadow); }
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 14px; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 1800px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .rbtn { background: var(--ink); color: var(--paper); border: none; border-radius: 100px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; }
+  .rbtn:hover { background: var(--teal); }
+
+  footer { background: var(--ink); color: rgba(250,249,246,0.55); text-align: center;
+    padding: 32px 20px; font-size: 0.85rem; margin-top: 60px; }
+  footer strong { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 48px 20px 40px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ════ light format (applied Sept 2026): overrides the dark theme above ════ */
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 4 · Friday 18 September 2026</div>
+    <h1>Python I:<br><em>values, functions, and the loop</em></h1>
+    <p class="lead">The first of six sessions on the tools, and the one that assumes least. By the end of today you will be able to write a function that takes a list of numbers and returns their average — which is a smaller thing than it sounds, and the exact thing everything else in this course is built on.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 1 · Foundations</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 1 · five small functions</span>
+      <span class="tag">Laptops open</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#floor">Who this is for</a>
+  <a href="#notebook">The notebook</a>
+  <a href="#values">Values and names</a>
+  <a href="#functions">Functions</a>
+  <a href="#choice">Choosing</a>
+  <a href="#loop">The loop</a>
+  <a href="#together">All four at once</a>
+  <a href="#lab">Lab 1</a>
+  <a href="#next">Before Tuesday</a>
+</div></nav>
+
+<div class="page">
+
+<!-- ══════════════════════════ FLOOR ══════════════════════════ -->
+<div class="module-header ink" data-num="0" id="floor">
+  <div class="mod-label">Opening · 6 minutes</div>
+  <h2>Two kinds of student are in this room</h2>
+</div>
+
+<p>Some of you have written a few hundred lines of Java or C. Some of you have never written a line of anything. The diagnostic told me roughly how many of each, and this session is built for the second group — deliberately, and without apology to the first.</p>
+
+<div class="callout info">
+  <div class="callout-icon">🙋</div>
+  <div class="callout-body">
+    <strong>If you have programmed before</strong>
+    <p>The first twenty minutes will be slow. Use them: the syntax is different from Java in ways that will bite you later, and the last part of this session — the loop with an accumulator — is the exact shape of the training loop you will write in session 16. Read the extension problems at the end of Lab 1 rather than sitting idle.</p>
+  </div>
+</div>
+
+<div class="callout tip">
+  <div class="callout-icon">🌱</div>
+  <div class="callout-body">
+    <strong>If you have not</strong>
+    <p>You are not behind. Unit 1 is six sessions — nearly a fifth of the course — and it exists because arriving without programming is normal here. Two things will help more than anything else I can say. Type every line yourself rather than copying it, because your hands learn what your eyes do not. And when something breaks, read the last line of the error message before you do anything else; it is usually a plain English sentence.</p>
+  </div>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">Today's target, stated exactly</div>
+  <p>By the end of this session you can write this, and explain every line of it:</p>
+  <div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre><span class="kw">def</span> <span class="fn">average</span>(values):
+    total = <span class="num">0</span>
+    <span class="kw">for</span> v <span class="kw">in</span> values:
+        total = total + v
+    <span class="kw">return</span> total / <span class="fn">len</span>(values)</pre></div>
+  <p>Five lines. A value, a name, a function, a loop, and a return. Everything in unit 2 is this shape with more arithmetic in the middle.</p>
+</div>
+
+
+<!-- ══════════════════════════ NOTEBOOK ══════════════════════════ -->
+<div class="module-header sky" data-num="1" id="notebook">
+  <div class="mod-label">Part 1 · 5 minutes</div>
+  <h2>The notebook, and why we use one</h2>
+  <p>Every lab in this course is a Jupyter notebook. Two minutes on the mechanics, and one warning that will save you an afternoon later.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>Anaconda Prompt (Windows) · Terminal (macOS / Linux)</span><span class="code-lang shell">shell</span></div>
+<pre>conda activate csc4315
+jupyter lab</pre>
+</div>
+
+<p>A notebook is a list of cells. <kbd>Shift</kbd>+<kbd>Enter</kbd> runs a cell and moves on. Variables persist between cells, which is the whole point: you can compute something expensive once and then explore it for twenty minutes without recomputing.</p>
+
+<div class="callout stop">
+  <div class="callout-icon">⚠️</div>
+  <div class="callout-body">
+    <strong>The warning: cells remember, in the order you ran them</strong>
+    <p>A notebook's state depends on the order you <em>ran</em> the cells, not the order they appear on screen. You can delete a cell and still have its variable. You can have working code that fails completely for the person you send it to.</p>
+    <p><strong>Before you submit any lab: Kernel → Restart Kernel and Run All Cells.</strong> If it does not run clean from top to bottom, it is not finished. I will run your notebooks this way, and so will every employer you ever have.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ VALUES ══════════════════════════ -->
+<div class="module-header teal" data-num="2" id="values">
+  <div class="mod-label">Part 2 · 10 minutes</div>
+  <h2>Values, and the names we give them</h2>
+  <p>Four kinds of value, one operator that surprises people, and one rule about names.</p>
+</div>
+
+<p>A <strong>value</strong> is a piece of data. Python has many kinds; this course uses four, and you will meet three of them in the next ten minutes.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre>temperature = <span class="num">36.6</span>        <span class="cm"># a float — a number with a decimal point</span>
+count       = <span class="num">42</span>          <span class="cm"># an int — a whole number</span>
+name        = <span class="str">"Aya"</span>       <span class="cm"># a str — text, in quotes</span>
+is_ready    = <span class="kw">True</span>        <span class="cm"># a bool — True or False, capitalised</span></pre></div>
+
+<p>The <code>=</code> sign is not equality. It means <em>give this value the name on the left</em>. Read it as "becomes", never as "equals" — the difference will matter in ten minutes when you write <code>total = total + v</code>, which is nonsense as equality and perfectly sensible as an instruction.</p>
+
+<h3>The name is a label, not a box</h3>
+
+<p>A name does not contain a value; it points at one. Today that distinction costs you nothing. In session 5, when you meet lists, it becomes the single most common cause of bugs that make no sense — so meet it now while it is harmless.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre>a = <span class="num">5</span>
+b = a          <span class="cm"># b now points at the same 5</span>
+a = <span class="num">7</span>          <span class="cm"># a now points at a 7 instead</span>
+<span class="fn">print</span>(a, b)    <span class="cm"># 7 5  — b did not follow a</span></pre></div>
+
+<h3>The operator that catches everyone</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre><span class="num">7</span> / <span class="num">2</span>     <span class="cm"># 3.5   true division — always gives a float</span>
+<span class="num">7</span> // <span class="num">2</span>    <span class="cm"># 3     floor division — throws the remainder away</span>
+<span class="num">7</span> % <span class="num">2</span>     <span class="cm"># 1     the remainder itself</span></pre></div>
+
+<div class="callout warn">
+  <div class="callout-icon">🕳️</div>
+  <div class="callout-body">
+    <strong>Where this will bite you</strong>
+    <p>Use <code>//</code> when you mean "how many whole mini-batches fit in this dataset" — session 16. Use <code>/</code> everywhere else. Silently getting 3 where you meant 3.5 is a classic way to make a loss function quietly wrong, and quietly wrong is much worse than broken, because nothing tells you.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ FUNCTIONS ══════════════════════════ -->
+<div class="module-header violet" data-num="3" id="functions">
+  <div class="mod-label">Part 3 · 14 minutes</div>
+  <h2>A function is a machine you name once and use often</h2>
+  <p>This is the most important part of the session. Everything you write for the rest of the term is a handful of functions.</p>
+</div>
+
+<p>A function takes something in, does work, and hands something back. Three words carry it: <code>def</code> to define, the names in the brackets to receive, and <code>return</code> to hand back.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre><span class="kw">def</span> <span class="fn">double</span>(x):        <span class="cm"># def · the name · what it receives</span>
+    <span class="kw">return</span> x * <span class="num">2</span>      <span class="cm"># what it hands back</span>
+
+<span class="fn">print</span>(<span class="fn">double</span>(<span class="num">5</span>))       <span class="cm"># 10</span>
+<span class="fn">print</span>(<span class="fn">double</span>(<span class="num">1.5</span>))     <span class="cm"># 3.0  — the same machine, a different input</span></pre></div>
+
+<div class="callout info">
+  <div class="callout-icon">📐</div>
+  <div class="callout-body">
+    <strong>The indentation is the syntax</strong>
+    <p>In Java or C, braces mark what belongs to the function. In Python, the indentation <em>is</em> the structure — four spaces, and every line at that depth is inside the function. This is not a style preference; get it wrong and the program means something else. Your editor will indent for you after a line ending in a colon.</p>
+  </div>
+</div>
+
+<h3>Two arguments, and a name that means nothing to Python</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre><span class="kw">def</span> <span class="fn">rectangle_area</span>(width, height):
+    <span class="kw">return</span> width * height
+
+<span class="fn">print</span>(<span class="fn">rectangle_area</span>(<span class="num">3</span>, <span class="num">4</span>))     <span class="cm"># 12</span></pre></div>
+
+<p>Python does not know what "width" means. The names are for the person reading, and the person reading in November will be you. <code>rectangle_area(w, h)</code> runs identically and tells you nothing.</p>
+
+<h3>The difference between printing and returning</h3>
+
+<p>This trips up almost everyone in their first week, so meet it deliberately.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre><span class="kw">def</span> <span class="fn">show_double</span>(x):
+    <span class="fn">print</span>(x * <span class="num">2</span>)       <span class="cm"># shows it on screen, hands back nothing</span>
+
+<span class="kw">def</span> <span class="fn">give_double</span>(x):
+    <span class="kw">return</span> x * <span class="num">2</span>      <span class="cm"># hands it back, shows nothing</span>
+
+result = <span class="fn">show_double</span>(<span class="num">5</span>)    <span class="cm"># prints 10 · result is None</span>
+result = <span class="fn">give_double</span>(<span class="num">5</span>)    <span class="cm"># prints nothing · result is 10</span>
+<span class="fn">print</span>(<span class="fn">give_double</span>(<span class="num">5</span>) + <span class="num">1</span>)  <span class="cm"># 11 — you can only do this with a return</span></pre></div>
+
+<div class="callout stop">
+  <div class="callout-icon">🛑</div>
+  <div class="callout-body">
+    <strong>Print is for you. Return is for the program.</strong>
+    <p>A function that prints its answer instead of returning it is a dead end: nothing else can use the result. Every function you write in this course returns. If you want to see a value as well, print the result of calling the function — not from inside it.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ CHOICE ══════════════════════════ -->
+<div class="module-header sky" data-num="4" id="choice">
+  <div class="mod-label">Part 4 · 8 minutes</div>
+  <h2>Choosing: if, else, and comparison</h2>
+</div>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre><span class="kw">def</span> <span class="fn">classify</span>(score):
+    <span class="kw">if</span> score &gt;= <span class="num">50</span>:
+        <span class="kw">return</span> <span class="str">"pass"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">"fail"</span>
+
+<span class="fn">print</span>(<span class="fn">classify</span>(<span class="num">72</span>), <span class="fn">classify</span>(<span class="num">31</span>))   <span class="cm"># pass fail</span></pre></div>
+
+<p>The comparisons are <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>, <code>==</code> for equal and <code>!=</code> for not equal. Note the double equals: one <code>=</code> gives a name to a value, two <code>==</code> asks a question. Python will tell you if you confuse them, which is more than C will do.</p>
+
+<h3>Return exits immediately</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre><span class="kw">def</span> <span class="fn">classify</span>(score):
+    <span class="kw">if</span> score &gt;= <span class="num">50</span>:
+        <span class="kw">return</span> <span class="str">"pass"</span>
+    <span class="kw">return</span> <span class="str">"fail"</span>        <span class="cm"># only reached if the if did not fire</span></pre></div>
+
+<p>Both versions are correct. The second is common in real code because <code>return</code> ends the function on the spot — nothing after it runs. You saw exactly this shape in the diagnostic, in the <code>even</code>/<code>odd</code> question.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">✍️</div>
+  <div class="callout-body">
+    <strong>Do this now — two minutes, on paper</strong>
+    <p>Write a function <code>bigger(a, b)</code> that returns the larger of its two arguments. Do not run it. When you think it is right, trade papers with the person beside you and find one thing wrong with theirs — a missing colon, a missing return, an indentation that is off. Finding other people's mistakes is how you learn to see your own.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ LOOP ══════════════════════════ -->
+<div class="module-header gold" data-num="5" id="loop">
+  <div class="mod-label">Part 5 · 16 minutes</div>
+  <h2>The loop, and the accumulator inside it</h2>
+  <p>The single most important fifteen minutes of unit 1. Everything from session 9 onward is a loop with an accumulator.</p>
+</div>
+
+<p>A <strong>list</strong> is several values under one name. You will meet lists properly on Tuesday; today you only need to be able to walk along one.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre>scores = [<span class="num">70</span>, <span class="num">85</span>, <span class="num">60</span>, <span class="num">95</span>]
+
+<span class="kw">for</span> s <span class="kw">in</span> scores:
+    <span class="fn">print</span>(s)          <span class="cm"># 70 · 85 · 60 · 95, one per line</span></pre></div>
+
+<p>Read <code>for s in scores</code> as: <em>take each value in scores, call it s, and run the indented lines with it</em>. The name <code>s</code> is yours to choose and exists only inside the loop.</p>
+
+<h3>The accumulator: a name that survives the loop</h3>
+
+<p>Printing each value is not useful. What you almost always want is to <em>build up</em> an answer as you go. That needs a name created <em>before</em> the loop, which the loop then updates.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre>scores = [<span class="num">70</span>, <span class="num">85</span>, <span class="num">60</span>, <span class="num">95</span>]
+
+total = <span class="num">0</span>              <span class="cm"># before the loop — this is the accumulator</span>
+<span class="kw">for</span> s <span class="kw">in</span> scores:
+    total = total + s   <span class="cm"># inside — updated once per value</span>
+<span class="fn">print</span>(total)           <span class="cm"># 310 — after the loop, the answer is here</span></pre></div>
+
+<div class="callout info">
+  <div class="callout-icon">🔍</div>
+  <div class="callout-body">
+    <strong>Trace it by hand before you run it</strong>
+    <p>Draw two columns, <code>s</code> and <code>total</code>, and fill in a row per pass: (70, 70), (85, 155), (60, 215), (95, 310). Do this on paper for every loop you do not immediately believe. It takes ninety seconds and it is the skill the whole of session 14 depends on — the diagnostic's first question was exactly this and it is worth being certain about.</p>
+  </div>
+</div>
+
+<p>Three details decide whether an accumulator works, and each is a whole class of bug:</p>
+
+<div class="step-list">
+  <div class="step-num">1</div><div class="step-text"><strong>Start it before the loop.</strong> Put <code>total = 0</code> inside and it resets on every pass, leaving you with the last value instead of the sum.</div>
+  <div class="step-num">2</div><div class="step-text"><strong>Start it at the right value.</strong> Zero is right for a sum. For "the largest so far", zero is wrong the moment the data contains negatives — start from the first element instead. This was bug two in the diagnostic.</div>
+  <div class="step-num">3</div><div class="step-text"><strong>Return after the loop, not inside it.</strong> A <code>return</code> indented into the loop body ends the function on the first pass. This was bug three in the diagnostic, and it is the one that separates people who trace code from people who read it.</div>
+</div>
+
+<h3>Counting instead of summing</h3>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre><span class="kw">def</span> <span class="fn">count_passes</span>(scores):
+    n = <span class="num">0</span>
+    <span class="kw">for</span> s <span class="kw">in</span> scores:
+        <span class="kw">if</span> s &gt;= <span class="num">50</span>:
+            n = n + <span class="num">1</span>       <span class="cm"># only when the condition holds</span>
+    <span class="kw">return</span> n
+
+<span class="fn">print</span>(<span class="fn">count_passes</span>([<span class="num">70</span>, <span class="num">40</span>, <span class="num">85</span>, <span class="num">30</span>]))   <span class="cm"># 2</span></pre></div>
+
+<p>Same skeleton, different accumulator: a counter rather than a sum, and an <code>if</code> deciding whether to update it. Sum, count, largest, smallest — all four are this shape, and between them they cover most of what you will write before session 9.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">⌨️</div>
+  <div class="callout-body">
+    <strong>A shortcut you will see everywhere</strong>
+    <p><code>total += s</code> means exactly <code>total = total + s</code>, and <code>n += 1</code> means <code>n = n + 1</code>. Use whichever you find clearer; the long form is easier to trace when you are learning, so this course writes it out and you should too, for now.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ TOGETHER ══════════════════════════ -->
+<div class="module-header ink" data-num="6" id="together">
+  <div class="mod-label">Part 6 · 5 minutes</div>
+  <h2>All four ideas, in five lines</h2>
+</div>
+
+<p>Back to the target from the opening. You now have every piece of it.</p>
+
+<div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre><span class="kw">def</span> <span class="fn">average</span>(values):        <span class="cm"># a function, receiving a list</span>
+    total = <span class="num">0</span>               <span class="cm"># an accumulator, before the loop</span>
+    <span class="kw">for</span> v <span class="kw">in</span> values:        <span class="cm"># the loop</span>
+        total = total + v    <span class="cm"># the update</span>
+    <span class="kw">return</span> total / <span class="fn">len</span>(values)   <span class="cm"># hand the answer back</span></pre></div>
+
+<p><code>len(values)</code> gives the number of items — one of a handful of built-in functions you can simply use. And there is a bug in this version, which you should be able to find by asking one question: what happens if <code>values</code> is empty?</p>
+
+<div class="reveal" id="r-empty">
+  <button class="rbtn" onclick="tog('r-empty')">What happens, and how to fix it</button>
+  <div class="reveal-body">
+    <p>An empty list makes <code>len(values)</code> zero, and dividing by zero crashes with <code>ZeroDivisionError</code>. The fix is one <code>if</code> before the division:</p>
+    <div class="code-block"><div class="code-header"><span class="code-lang">python</span></div><pre><span class="kw">def</span> <span class="fn">average</span>(values):
+    <span class="kw">if</span> <span class="fn">len</span>(values) == <span class="num">0</span>:
+        <span class="kw">return</span> <span class="num">0</span>
+    total = <span class="num">0</span>
+    <span class="kw">for</span> v <span class="kw">in</span> values:
+        total = total + v
+    <span class="kw">return</span> total / <span class="fn">len</span>(values)</pre></div>
+    <p>Thinking about the empty case, the zero case and the negative case before running anything is a habit worth building now. In session 20 it becomes the difference between a pipeline that works and one that silently drops rows.</p>
+  </div>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">Why this session mattered</div>
+  <p>In session 8 you will write a layer of a neural network. It is a function that receives numbers, loops over them accumulating a weighted sum, and returns the result. In session 16 you will write a training loop: an accumulator holding the loss, updated once per batch, returned at the end. You have just learned the shape of both. Everything after this is more arithmetic inside the same five lines.</p>
+</div>
+
+<!-- ══════════════════════════ LAB ══════════════════════════ -->
+<div class="module-header teal" data-num="7" id="lab">
+  <div class="mod-label">Lab 1 · 16 minutes in class</div>
+  <h2>Five functions, four lines or fewer</h2>
+</div>
+
+<p>Lab 1 is a separate handout — open <code>CSC4315_Lab01_Five_Functions.html</code> or the printed copy. Five short functions, in order of difficulty, every one of them a variation on what you have seen in the last hour.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">✅</div>
+  <div class="callout-body">
+    <strong>The rule for every lab in this course</strong>
+    <p><strong>You finish it in the room.</strong> If you are stuck for more than three minutes, raise your hand — that is what the time is for, and asking early is the efficient move rather than the embarrassing one. Nothing in Lab 1 is a prerequisite for Tuesday: session 5 starts from a state the whole room shares, whether or not your lab ran.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ NEXT ══════════════════════════ -->
+<h3 id="next">Before Tuesday</h3>
+
+<ol>
+  <li><strong>Finish Lab 1</strong> if you did not get through all five in the room. Nobody is checking, and you will feel the difference on Tuesday if you skip it.</li>
+  <li><strong>Re-type the <code>average</code> function from memory</strong>, without looking. Get it wrong, look, and do it again. Ten minutes, and it is worth more than an hour of reading.</li>
+  <li><strong>Optional, for anyone who found today easy:</strong> write <code>largest(values)</code> without using <code>max</code>, and make it work when every number is negative. Bring it if you would like me to look at it.</li>
+</ol>
+
+<div class="callout tip">
+  <div class="callout-icon">➡️</div>
+  <div class="callout-body">
+    <strong>Session 5 — Tuesday 22 September, 16:00</strong>
+    <p><em>Python II: lists, slicing, comprehensions.</em> Lists properly this time — indexing, the half-open slice that trips up everyone including experienced programmers, nested lists as grids, and the comprehension as a shorter loop. The grid we build on Tuesday is the same object as an image in session 23, which is not a coincidence.</p>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 4 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

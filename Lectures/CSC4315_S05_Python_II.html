@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 5 — Python II: Lists, Slicing, Comprehensions</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #faf9f6; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fde68a;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 4px 24px rgba(15,14,23,0.08);
+    --card-shadow-hover: 0 12px 40px rgba(15,14,23,0.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  .hero { background: var(--ink); color: var(--paper); padding: 76px 40px 56px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 76% 24%, rgba(13,148,136,0.36) 0%, transparent 58%),
+                radial-gradient(ellipse at 14% 84%, rgba(2,132,199,0.3) 0%, transparent 55%),
+                radial-gradient(ellipse at 94% 94%, rgba(232,168,56,0.22) 0%, transparent 50%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: rgba(232,168,56,0.2); border: 1px solid var(--gold);
+    color: var(--gold-light); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { font-size: 1.12rem; color: rgba(250,249,246,0.78); max-width: 660px; margin-bottom: 32px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--paper); padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.1); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; }
+  .toc a { color: rgba(250,249,246,0.65); text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    padding: 14px 15px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  .module-header { margin: 56px 0 28px; padding: 30px 34px; border-radius: 16px; position: relative; overflow: hidden; }
+  .module-header.teal { background: var(--teal); }
+  .module-header.violet { background: var(--violet); }
+  .module-header.gold { background: #92400e; }
+  .module-header.sky { background: #075985; }
+  .module-header.rose { background: #9f1239; }
+  .module-header.ink { background: var(--ink); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', serif; font-size: 5rem;
+    font-weight: 900; color: rgba(255,255,255,0.12); line-height: 1; }
+  .module-header .mod-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .module-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+    color: #fff; line-height: 1.2; }
+  .module-header p { color: rgba(255,255,255,0.82); margin-top: 8px; font-size: 0.97rem; max-width: 620px; }
+
+  h3 { font-family: 'Playfair Display', serif; font-size: 1.32rem; font-weight: 700; margin: 38px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    box-shadow: var(--card-shadow); transition: box-shadow 0.25s, transform 0.25s; }
+  .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-3px); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 14px; box-shadow: var(--card-shadow); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--ink); color: var(--paper); }
+  thead th { padding: 13px 15px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 12px 15px; font-size: 0.88rem; vertical-align: top; }
+  tbody tr:hover { background: var(--cream); }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip { background: var(--teal-light); border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3; border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light); border-left: 4px solid var(--sky); }
+  .callout.try { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light); border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body strong { display: block; margin-bottom: 4px; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: var(--gold-light); border: 1px solid #d9a441; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 24px 28px; margin: 28px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.05rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+  .bigidea p + p { margin-top: 12px; }
+
+  .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 18px 0; box-shadow: var(--card-shadow); }
+  .code-header { background: #2a2a3d; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .code-header span { color: rgba(255,255,255,0.55); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal); color: #fff; font-size: 0.7rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .code-lang.shell { background: var(--slate); }
+  .code-lang.bad { background: var(--rose); }
+  pre { padding: 20px 22px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; line-height: 1.65; color: #cdd6f4; }
+  .kw { color: #cba6f7; } .str { color: #a6e3a1; } .cm { color: #6c7086; font-style: italic; }
+  .fn { color: #89b4fa; } .num { color: #fab387; } .var { color: #f38ba8; } .out { color: #f9e2af; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    margin: 24px 0; box-shadow: var(--card-shadow); overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  .step-list { list-style: none; margin: 16px 0; }
+  .step-list li { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; flex-shrink: 0; }
+  .step-text strong { display: block; margin-bottom: 3px; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 16px; margin: 26px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center;
+    box-shadow: var(--card-shadow); }
+  .stat .big { font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.05; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--slate); margin-top: 8px; }
+  .stat.alert .big { color: var(--rose); }
+  .stat.good .big { color: var(--teal); }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 2px 6px; border-radius: 5px; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px;
+    margin: 18px 0; box-shadow: var(--card-shadow); }
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 14px; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 1800px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .rbtn { background: var(--ink); color: var(--paper); border: none; border-radius: 100px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; }
+  .rbtn:hover { background: var(--teal); }
+
+  footer { background: var(--ink); color: rgba(250,249,246,0.55); text-align: center;
+    padding: 32px 20px; font-size: 0.85rem; margin-top: 60px; }
+  footer strong { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 48px 20px 40px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ════ light format (applied Sept 2026): overrides the dark theme above ════ */
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 5 · Tuesday 22 September 2026</div>
+    <h1>Python II:<br><em>lists, slicing, comprehensions</em></h1>
+    <p class="lead">On Friday you walked along a list. Today you take one apart — index it, slice it, copy it without meaning to, nest it into a grid, and finally hit the wall that makes NumPy necessary on Friday.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 1 · Foundations</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 2 · a grid, two ways</span>
+      <span class="tag">Laptops open</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#recap">Where we are</a>
+  <a href="#lists">Lists</a>
+  <a href="#slicing">Slicing</a>
+  <a href="#traps">The copy trap</a>
+  <a href="#comp">Comprehensions</a>
+  <a href="#grids">Grids</a>
+  <a href="#wall">The wall</a>
+  <a href="#lab">Lab 2</a>
+  <a href="#next">Before Friday</a>
+</div></nav>
+
+<div class="page">
+
+<!-- ══════════════════════════ RECAP ══════════════════════════ -->
+<h3 id="recap">Where we are</h3>
+
+<p>Friday gave you four things: a value, a name, a function, and a loop with an accumulator. That was enough to write <code>average(values)</code>, and <code>average</code> is genuinely the shape of everything in unit 2.</p>
+
+<p>But look at what you were handed rather than what you wrote. The <em>list</em> arrived from nowhere. You walked along it and never asked what it was, how to reach into it, or what happens when you copy one. Today is that, and it matters more than it sounds: by session 8 a list of numbers becomes a layer of a network, and by session 23 a list of lists is an image.</p>
+
+<div class="callout info">
+  <div class="callout-icon">📋</div>
+  <div class="callout-body">
+    <strong>Lab 1, briefly</strong>
+    <p>Two things came up in most rooms. The negative case in <code>bigger</code> — anyone who started from zero got it wrong, on purpose, and that is bug two from the diagnostic. And several people put <code>return</code> inside the loop in <code>total</code>, which is bug three. If both of those are now obvious to you, Friday did its job.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ LISTS ══════════════════════════ -->
+<div class="module-header teal" data-num="1" id="lists">
+  <div class="mod-label">Part 1 · 12 minutes</div>
+  <h2>A list, and how to reach into it</h2>
+  <p>Several values under one name, in a definite order, reachable by position.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>the basics — run every line</span><span class="code-lang">python</span></div>
+<pre>scores = [<span class="num">70</span>, <span class="num">85</span>, <span class="num">60</span>, <span class="num">95</span>]
+
+scores[<span class="num">0</span>]        <span class="cm"># 70   the FIRST element — counting starts at zero</span>
+scores[<span class="num">3</span>]        <span class="cm"># 95   the fourth</span>
+scores[-<span class="num">1</span>]       <span class="cm"># 95   the last, without knowing how long the list is</span>
+scores[-<span class="num">2</span>]       <span class="cm"># 60   second from the end</span>
+
+<span class="fn">len</span>(scores)      <span class="cm"># 4    how many items</span>
+scores[<span class="num">4</span>]        <span class="cm"># IndexError — there is no fifth element</span></pre>
+</div>
+
+<div class="callout warn">
+  <div class="callout-icon">🔢</div>
+  <div class="callout-body">
+    <strong>Zero-based indexing, said once, properly</strong>
+    <p>The first element is at position 0 and the last is at position <code>len(scores) - 1</code>. This is not a quirk to tolerate; it is why <code>-1</code> means "the last" and why slicing works as cleanly as it does in ten minutes' time. If you came from a language that counts from one, expect to make this mistake twice today and then stop.</p>
+  </div>
+</div>
+
+<h3>Changing a list, and growing one</h3>
+
+<div class="code-block">
+  <div class="code-header"><span class="code-lang">python</span></div>
+<pre>scores = [<span class="num">70</span>, <span class="num">85</span>, <span class="num">60</span>, <span class="num">95</span>]
+
+scores[<span class="num">1</span>] = <span class="num">90</span>            <span class="cm"># replace in place → [70, 90, 60, 95]</span>
+scores.<span class="fn">append</span>(<span class="num">55</span>)         <span class="cm"># add to the end  → [70, 90, 60, 95, 55]</span>
+<span class="fn">len</span>(scores)              <span class="cm"># 5</span></pre>
+</div>
+
+<p><code>append</code> is the one you will use constantly: it is how a loop builds a list of results, which is the pattern behind every plot you draw for the rest of the term.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>the loop that builds a list — remember this shape</span><span class="code-lang">python</span></div>
+<pre>squares = []                 <span class="cm"># start empty, before the loop</span>
+<span class="kw">for</span> x <span class="kw">in</span> [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>]:
+    squares.<span class="fn">append</span>(x * x)     <span class="cm"># grow it, inside</span>
+<span class="fn">print</span>(squares)              <span class="cm"># [1, 4, 9, 16]</span></pre>
+</div>
+
+<div class="callout info">
+  <div class="callout-icon">🔗</div>
+  <div class="callout-body">
+    <strong>This is Friday's accumulator again</strong>
+    <p>Same three-step shape — create before the loop, update inside, use after — with a list in place of a number. Recognising that these are one pattern rather than two is worth more than memorising either.</p>
+  </div>
+</div>
+
+<h3>Two more things you will need today</h3>
+
+<div class="code-block">
+  <div class="code-header"><span class="code-lang">python</span></div>
+<pre><span class="fn">range</span>(<span class="num">5</span>)              <span class="cm"># 0, 1, 2, 3, 4 — five numbers, starting at zero</span>
+<span class="fn">range</span>(<span class="num">2</span>, <span class="num">6</span>)           <span class="cm"># 2, 3, 4, 5   — from 2 up to but NOT including 6</span>
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(scores)):
+    <span class="fn">print</span>(i, scores[i])   <span class="cm"># position and value together</span></pre>
+</div>
+
+<p>Two ways to walk a list, then: <code>for s in scores</code> when you want the values, and <code>for i in range(len(scores))</code> when you need the positions too. Prefer the first. You need the second exactly when you must know <em>where</em> something is — which is the grid problem in part 5, and was question B3 on the diagnostic.</p>
+
+<div class="callout warn">
+  <div class="callout-icon">🕳️</div>
+  <div class="callout-body">
+    <strong>"Up to but not including" is the theme of this session</strong>
+    <p><code>range(2, 6)</code> stops at 5. A slice will do the same thing in a moment. Anyone who answered 15 instead of 10 on the diagnostic's first question met this rule already: <code>range(1, 5)</code> gives 1, 2, 3, 4 and sums to 10. It is one rule, applied everywhere, and once you accept it the off-by-one errors stop.</p>
+  </div>
+</div>
+<!-- ══════════════════════════ SLICING ══════════════════════════ -->
+<div class="module-header violet" data-num="2" id="slicing">
+  <div class="mod-label">Part 2 · 14 minutes</div>
+  <h2>Slicing — spend real time here</h2>
+  <p>The single highest-value ten minutes in this session. Every dataset operation for the rest of the semester is a slice.</p>
+</div>
+
+<p>The mental model that makes slicing stop being confusing: <strong>indices do not label the elements, they label the gaps between them.</strong> A slice <code>a[i:j]</code> takes everything between gap <em>i</em> and gap <em>j</em>.</p>
+
+<div class="diagram-wrap">
+<div class="diagram-title">Index the fenceposts, not the fence panels</div>
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  <g font-family="JetBrains Mono" font-size="16">
+    <rect x="90"  y="56" width="96" height="52" rx="8" fill="#fff" stroke="#0f0e17" stroke-width="1.8"/>
+    <rect x="186" y="56" width="96" height="52" rx="8" fill="#fff" stroke="#0f0e17" stroke-width="1.8"/>
+    <rect x="282" y="56" width="96" height="52" rx="8" fill="#ccfbf1" stroke="#0d9488" stroke-width="2.4"/>
+    <rect x="378" y="56" width="96" height="52" rx="8" fill="#ccfbf1" stroke="#0d9488" stroke-width="2.4"/>
+    <rect x="474" y="56" width="96" height="52" rx="8" fill="#fff" stroke="#0f0e17" stroke-width="1.8"/>
+    <rect x="570" y="56" width="96" height="52" rx="8" fill="#fff" stroke="#0f0e17" stroke-width="1.8"/>
+    <text x="138" y="89" text-anchor="middle" fill="#0f0e17">10</text>
+    <text x="234" y="89" text-anchor="middle" fill="#0f0e17">20</text>
+    <text x="330" y="89" text-anchor="middle" fill="#115e59">30</text>
+    <text x="426" y="89" text-anchor="middle" fill="#115e59">40</text>
+    <text x="522" y="89" text-anchor="middle" fill="#0f0e17">50</text>
+    <text x="618" y="89" text-anchor="middle" fill="#0f0e17">60</text>
+  </g>
+  <g font-family="JetBrains Mono" font-size="13" fill="#0284c7">
+    <text x="90"  y="44" text-anchor="middle">0</text>
+    <text x="186" y="44" text-anchor="middle">1</text>
+    <text x="282" y="44" text-anchor="middle">2</text>
+    <text x="378" y="44" text-anchor="middle">3</text>
+    <text x="474" y="44" text-anchor="middle">4</text>
+    <text x="570" y="44" text-anchor="middle">5</text>
+    <text x="666" y="44" text-anchor="middle">6</text>
+  </g>
+  <g stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,3">
+    <line x1="90" y1="50" x2="90" y2="114"/><line x1="186" y1="50" x2="186" y2="114"/>
+    <line x1="282" y1="50" x2="282" y2="114"/><line x1="378" y1="50" x2="378" y2="114"/>
+    <line x1="474" y1="50" x2="474" y2="114"/><line x1="570" y1="50" x2="570" y2="114"/>
+    <line x1="666" y1="50" x2="666" y2="114"/>
+  </g>
+  <g font-family="JetBrains Mono" font-size="13" fill="#9f1239">
+    <text x="90"  y="132" text-anchor="middle">-6</text>
+    <text x="186" y="132" text-anchor="middle">-5</text>
+    <text x="282" y="132" text-anchor="middle">-4</text>
+    <text x="378" y="132" text-anchor="middle">-3</text>
+    <text x="474" y="132" text-anchor="middle">-2</text>
+    <text x="570" y="132" text-anchor="middle">-1</text>
+  </g>
+  <path d="M282 152 H 474" stroke="#0d9488" stroke-width="2.5"/>
+  <path d="M282 146 V 158 M474 146 V 158" stroke="#0d9488" stroke-width="2.5"/>
+  <text x="378" y="178" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#115e59" font-weight="500">a[2:4]  →  [30, 40]</text>
+  <text x="20" y="89" font-family="JetBrains Mono" font-size="15" fill="#0f0e17">a =</text>
+</svg>
+</div>
+
+<p>Read <code>a[2:4]</code> as "from gap 2 to gap 4". Two gaps apart, so two elements. The length of a slice is always <code>stop - start</code> — no off-by-one to reason about, ever again.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>run every one of these — outputs shown are real</span><span class="code-lang">python</span></div>
+<pre>a = [<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>, <span class="num">60</span>]
+
+a[<span class="num">2</span>]        <span class="cm"># 30          one element (an int, not a list)</span>
+a[<span class="num">2</span>:<span class="num">4</span>]      <span class="cm"># [30, 40]    gap 2 to gap 4</span>
+a[:<span class="num">3</span>]       <span class="cm"># [10, 20, 30]    from the start</span>
+a[<span class="num">3</span>:]       <span class="cm"># [40, 50, 60]    to the end</span>
+a[-<span class="num">1</span>]       <span class="cm"># 60          last element</span>
+a[-<span class="num">2</span>:]      <span class="cm"># [50, 60]    last two</span>
+a[::<span class="num">2</span>]      <span class="cm"># [10, 30, 50]    every second</span>
+a[::-<span class="num">1</span>]     <span class="cm"># [60, 50, 40, 30, 20, 10]    reversed</span>
+a[:]        <span class="cm"># a full copy — remember this one, Part 5 needs it</span></pre>
+</div>
+
+<div class="callout tip">
+  <div class="callout-icon">🎯</div>
+  <div class="callout-body">
+    <strong>Why this is worth ten minutes of an eighty-minute session</strong>
+    <p>In session 16 you will write <code>X_train = X[:800]</code> and <code>X_test = X[800:]</code> to split a dataset. In session 16 you will write <code>X[i:i+32]</code> to take a mini-batch. In NumPy on Friday the same syntax gains a second dimension: <code>X[0:5, 2:4]</code> — rows 0 to 5, columns 2 to 4. Nothing new to learn on Friday <em>if</em> you own this today.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ TRAPS ══════════════════════════ -->
+<div class="module-header rose" data-num="3" id="traps">
+  <div class="mod-label">Part 3 · 8 minutes</div>
+  <h2>The copy that is not a copy</h2>
+  <p>This one catches experienced programmers too, and it causes some of the nastiest bugs you will meet in NumPy later. Meet it now, on a three-element list, where it is still funny rather than expensive.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>predict the output before you read it</span><span class="code-lang">python</span></div>
+<pre>a = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]
+b = a           <span class="cm"># NOT a copy — b is a second label on the same list</span>
+b[<span class="num">0</span>] = <span class="num">99</span>
+
+<span class="fn">print</span>(a)        <span class="cm"># [99, 2, 3]   ← a changed, and you never touched a</span></pre>
+</div>
+
+<p>The fix is the slice you met a moment ago:</p>
+
+<div class="code-block">
+  <div class="code-header"><span>an actual copy</span><span class="code-lang">python</span></div>
+<pre>a = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]
+c = a[:]        <span class="cm"># or list(a) — a genuine copy</span>
+c[<span class="num">0</span>] = <span class="num">7</span>
+
+<span class="fn">print</span>(a, c)     <span class="cm"># [1, 2, 3]  [7, 2, 3]</span></pre>
+</div>
+
+<div class="callout stop">
+  <div class="callout-icon">🕳️</div>
+  <div class="callout-body">
+    <strong>Remember this one — it comes back much worse</strong>
+    <p>NumPy slices behave the same way, and for arrays the consequences are larger: a slice of an array is usually a <em>view</em> onto the original memory, so writing into the slice modifies the original array. When a training run in session 16 produces results that make no sense, this is the second thing to check. The first is shapes.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ COMPREHENSIONS ══════════════════════════ -->
+<div class="module-header gold" data-num="4" id="comp">
+  <div class="mod-label">Part 4 · 10 minutes</div>
+  <h2>Comprehensions — "do this to every element"</h2>
+  <p>One line replaces four, and more importantly it trains the habit of thinking about a whole collection at once.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>the same job, twice</span><span class="code-lang">python</span></div>
+<pre><span class="cm"># the loop you already know</span>
+squares = []
+<span class="kw">for</span> x <span class="kw">in</span> [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>]:
+    squares.<span class="fn">append</span>(x**<span class="num">2</span>)
+
+<span class="cm"># the same thing, as one expression</span>
+squares = [x**<span class="num">2</span> <span class="kw">for</span> x <span class="kw">in</span> [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>]</pre>
+</div>
+
+<p>Read it right to left: <em>for every x in this list, give me x squared</em>. You can filter in the same breath:</p>
+
+<div class="code-block">
+  <div class="code-header"><span>with a condition, and over a range</span><span class="code-lang">python</span></div>
+<pre>evens = [x <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>) <span class="kw">if</span> x % <span class="num">2</span> == <span class="num">0</span>]   <span class="cm"># [0, 2, 4, 6, 8]</span>
+
+<span class="cm"># range(a, b) counts from a up to but NOT including b — a slice, again</span>
+xs = [i/<span class="num">10</span> <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(-<span class="num">30</span>, <span class="num">31</span>)]        <span class="cm"># -3.0, -2.9, ... 3.0</span>
+<span class="fn">print</span>(<span class="fn">len</span>(xs))                              <span class="cm"># 61</span></pre>
+</div>
+
+<div class="callout info">
+  <div class="callout-icon">🧭</div>
+  <div class="callout-body">
+    <strong>Why divide by 10 instead of using a decimal step?</strong>
+    <p><code>range</code> only counts in whole numbers. So we count in integers and divide — a small, ordinary workaround. On Friday <code>np.linspace(-3, 3, 61)</code> replaces the whole line, and that substitution is a fair summary of what NumPy is for.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ GRIDS ══════════════════════════ -->
+<div class="module-header gold" data-num="5" id="grids">
+  <div class="mod-label">Part 5 · 10 minutes</div>
+  <h2>A list of lists is a grid</h2>
+  <p>And a grid, in this course, is a photograph. That is not a metaphor — it is the same object.</p>
+</div>
+
+<p>Put lists inside a list and you have rows. Each inner list is one row; each position inside it is one column.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>three rows, three columns</span><span class="code-lang">python</span></div>
+<pre>grid = [[<span class="num">4</span>, <span class="num">7</span>, <span class="num">2</span>],
+        [<span class="num">9</span>, <span class="num">1</span>, <span class="num">8</span>],
+        [<span class="num">3</span>, <span class="num">6</span>, <span class="num">5</span>]]
+
+grid[<span class="num">1</span>]           <span class="cm"># [9, 1, 8]   the whole second row</span>
+grid[<span class="num">1</span>][<span class="num">0</span>]        <span class="cm"># 9           row 1, column 0</span>
+grid[<span class="num">0</span>][<span class="num">2</span>]        <span class="cm"># 2           row 0, column 2</span>
+
+<span class="fn">len</span>(grid)         <span class="cm"># 3   how many rows</span>
+<span class="fn">len</span>(grid[<span class="num">0</span>])      <span class="cm"># 3   how many columns</span></pre>
+</div>
+
+<div class="callout stop">
+  <div class="callout-icon">🛑</div>
+  <div class="callout-body">
+    <strong>Row first, then column. Always.</strong>
+    <p><code>grid[1][0]</code> is row 1, column 0 — <em>not</em> x = 1, y = 0. If you learned coordinates in mathematics, this is the reverse of what your hand wants to write. It is the convention in NumPy, in PyTorch, in every image library, and in every line of this course from here to December. Say "row, column" out loud when you write it, for about a week, and then it will be automatic.</p>
+  </div>
+</div>
+
+<h3>Walking a grid needs two loops</h3>
+
+<div class="code-block">
+  <div class="code-header"><span>the nested loop — the shape of diagnostic question B3</span><span class="code-lang">python</span></div>
+<pre><span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(grid)):            <span class="cm"># each row</span>
+    <span class="kw">for</span> c <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(grid[<span class="num">0</span>])):     <span class="cm"># each column in that row</span>
+        <span class="fn">print</span>(r, c, grid[r][c])</pre>
+</div>
+
+<p>The outer loop picks a row and holds it still; the inner loop runs all the way across before the outer one moves on. Nine passes for a 3 × 3 grid, in the order (0,0), (0,1), (0,2), (1,0) and so on. Trace it on paper if that order is not obvious — the same two columns you drew on Friday, with <code>r</code> and <code>c</code> this time.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>the accumulator again, now over two dimensions</span><span class="code-lang">python</span></div>
+<pre><span class="kw">def</span> <span class="fn">grid_total</span>(g):
+    running = <span class="num">0</span>
+    <span class="kw">for</span> row <span class="kw">in</span> g:
+        <span class="kw">for</span> value <span class="kw">in</span> row:
+            running = running + value
+    <span class="kw">return</span> running
+
+<span class="fn">print</span>(<span class="fn">grid_total</span>(grid))     <span class="cm"># 45</span></pre>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">Why this small thing is a large thing</div>
+  <p>A grayscale photograph is exactly this: a list of rows, each row a list of numbers from 0 (black) to 255 (white). A 28 × 28 handwritten digit is 28 lists of 28 numbers. When we get to session 23 and open a real image, no new idea arrives — only a bigger grid and a faster container. You have just learned the data structure of computer vision, in a form small enough to check by hand.</p>
+</div>
+
+<div class="callout tip">
+  <div class="callout-icon">✍️</div>
+  <div class="callout-body">
+    <strong>Do this now — three minutes</strong>
+    <p>Write <code>row_totals(g)</code>, returning a list with one sum per row. For the grid above it gives <code>[13, 18, 14]</code>. You need an outer loop, an accumulator per row, and <code>append</code>. This is the hardest thing in today's session and it is worth doing before the lab rather than during it.</p>
+  </div>
+</div>
+<!-- ══════════════════════════ WALL ══════════════════════════ -->
+<div class="module-header ink" data-num="6" id="wall">
+  <div class="mod-label">Part 6 · 6 minutes</div>
+  <h2>The wall: a list is the wrong container</h2>
+  <p>Everything above is real Python. Now here is why it is not enough, and why Friday exists.</p>
+</div>
+
+<p>You have a list of numbers and you want to double every one of them. The obvious thing to try:</p>
+
+<div class="code-block">
+  <div class="code-header"><span>this does not do what you want</span><span class="code-lang bad">wrong</span></div>
+<pre>[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>] * <span class="num">2</span>
+<span class="out">→ [1, 2, 3, 1, 2, 3]</span>        <span class="cm"># repeated, not doubled</span>
+
+[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>] + <span class="num">10</span>
+<span class="out">→ TypeError: can only concatenate list (not "int") to list</span></pre>
+</div>
+
+<p>This is not a Python defect. A list is a general-purpose container — it can hold numbers, strings, other lists, anything at once — so <code>*</code> and <code>+</code> mean the only things that make sense for a general container: repeat and join. Arithmetic on every element is not something a list can assume you meant.</p>
+
+<p>So you write a comprehension, and it works. Then you measure it. Here is the same job — square a million numbers — three ways, timed on an ordinary laptop:</p>
+
+<div class="stat-row">
+  <div class="stat alert"><div class="big">255<span style="font-size:1rem"> ms</span></div><div class="lbl"><code>for</code> loop + append</div></div>
+  <div class="stat alert"><div class="big">200<span style="font-size:1rem"> ms</span></div><div class="lbl">List comprehension</div></div>
+  <div class="stat good"><div class="big">1.2<span style="font-size:1rem"> ms</span></div><div class="lbl">NumPy — Friday</div></div>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">Roughly two hundred times faster, for one line of code</div>
+  <p>And a million numbers is nothing. AlexNet did 3.6 × 10<sup>17</sup> operations. At the loop's speed that training run would take about three thousand years — which is worse than the 1989 hardware you calculated last week.</p>
+  <p>The whole of Friday is one idea: stop telling the computer to visit elements one at a time, and start naming the operation you want performed on all of them at once. The difference is not style. It is the difference between this course being possible and not.</p>
+</div>
+
+
+<!-- ══════════════════════════ LAB ══════════════════════════ -->
+<div class="module-header teal" data-num="7" id="lab">
+  <div class="mod-label">Lab 2 · 16 minutes in class</div>
+  <h2>A grid, and the same job written twice</h2>
+</div>
+
+<p>Lab 2 is a separate handout — <code>CSC4315_Lab02_Grids_And_Slices.html</code>, or the printed copy. Six short tasks: index a grid, slice a list, find where something is, and write one job as a loop and then as a comprehension so you can see they are the same thing.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">✅</div>
+  <div class="callout-body">
+    <strong>Same rule as last week</strong>
+    <p>Finish it in the room. Hand up after three minutes of being stuck. And nothing in Lab 2 is a prerequisite for Friday — session 6 starts from a state the whole room shares, whether or not your lab ran.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ NEXT ══════════════════════════ -->
+<h3 id="next">Before Friday</h3>
+
+<ol>
+  <li><strong>Finish Lab 2</strong> if the last two tasks did not fit in the room.</li>
+  <li><strong>Write <code>row_totals</code> from part 5 without looking</strong>, then check it against a grid you make up. Ten minutes. This is the single exercise most likely to make Friday easy.</li>
+  <li><strong>Read your own Lab 1 <code>total</code> function again</strong> and satisfy yourself that the grid version is the same three steps with one more loop around them. If that sentence does not yet feel true, bring it to me on Friday before class.</li>
+  <li><strong>Nothing to install.</strong> NumPy came with Anaconda in session 1.</li>
+</ol>
+
+<div class="callout tip">
+  <div class="callout-icon">➡️</div>
+  <div class="callout-body">
+    <strong>Session 6 — Friday 25 September, 11:30</strong>
+    <p><em>NumPy I: arrays and shapes.</em> The wall you just hit has a name and a fix. An array is a container that assumes every element is a number of the same kind, which is what lets <code>a * 2</code> mean "double every element" and lets it run a hundred times faster than your loop. You will also meet <code>.shape</code>, which becomes the first thing you print whenever anything goes wrong for the rest of the course.</p>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 5 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

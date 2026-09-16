@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 8 — The Layer is a Matrix Multiply</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #faf9f6; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fde68a;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 4px 24px rgba(15,14,23,0.08);
+    --card-shadow-hover: 0 12px 40px rgba(15,14,23,0.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  .hero { background: var(--ink); color: var(--paper); padding: 76px 40px 56px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 72% 26%, rgba(124,58,237,0.34) 0%, transparent 58%),
+                radial-gradient(ellipse at 16% 84%, rgba(13,148,136,0.34) 0%, transparent 55%),
+                radial-gradient(ellipse at 94% 94%, rgba(232,168,56,0.24) 0%, transparent 50%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: rgba(232,168,56,0.2); border: 1px solid var(--gold);
+    color: var(--gold-light); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { font-size: 1.12rem; color: rgba(250,249,246,0.78); max-width: 660px; margin-bottom: 32px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--paper); padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.1); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; }
+  .toc a { color: rgba(250,249,246,0.65); text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    padding: 14px 15px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  .module-header { margin: 56px 0 28px; padding: 30px 34px; border-radius: 16px; position: relative; overflow: hidden; }
+  .module-header.teal { background: var(--teal); }
+  .module-header.violet { background: var(--violet); }
+  .module-header.gold { background: #92400e; }
+  .module-header.sky { background: #075985; }
+  .module-header.rose { background: #9f1239; }
+  .module-header.ink { background: var(--ink); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', serif; font-size: 5rem;
+    font-weight: 900; color: rgba(255,255,255,0.12); line-height: 1; }
+  .module-header .mod-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .module-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+    color: #fff; line-height: 1.2; }
+  .module-header p { color: rgba(255,255,255,0.82); margin-top: 8px; font-size: 0.97rem; max-width: 620px; }
+
+  h3 { font-family: 'Playfair Display', serif; font-size: 1.32rem; font-weight: 700; margin: 38px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    box-shadow: var(--card-shadow); transition: box-shadow 0.25s, transform 0.25s; }
+  .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-3px); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 14px; box-shadow: var(--card-shadow); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--ink); color: var(--paper); }
+  thead th { padding: 13px 15px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 12px 15px; font-size: 0.88rem; vertical-align: top; }
+  tbody tr:hover { background: var(--cream); }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+  td.ok { color: #166534; font-weight: 600; }
+  td.bad { color: #9f1239; font-weight: 600; }
+
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip { background: var(--teal-light); border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3; border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light); border-left: 4px solid var(--sky); }
+  .callout.try { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light); border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body strong { display: block; margin-bottom: 4px; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: var(--gold-light); border: 1px solid #d9a441; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 24px 28px; margin: 28px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.05rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .mono { background: rgba(255,255,255,0.55); padding: 2px 7px; border-radius: 5px; }
+
+  .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 18px 0; box-shadow: var(--card-shadow); }
+  .code-header { background: #2a2a3d; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .code-header span { color: rgba(255,255,255,0.55); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal); color: #fff; font-size: 0.7rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .code-lang.bad { background: var(--rose); }
+  .code-lang.gold { background: #b45309; }
+  pre { padding: 20px 22px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; line-height: 1.65; color: #cdd6f4; }
+  .kw { color: #cba6f7; } .str { color: #a6e3a1; } .cm { color: #6c7086; font-style: italic; }
+  .fn { color: #89b4fa; } .num { color: #fab387; } .var { color: #f38ba8; } .out { color: #f9e2af; }
+  .err { color: #f38ba8; font-weight: 500; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    margin: 24px 0; box-shadow: var(--card-shadow); overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  .step-list { list-style: none; margin: 16px 0; }
+  .step-list li { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; flex-shrink: 0; }
+  .step-text strong { display: block; margin-bottom: 3px; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 2px 6px; border-radius: 5px; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px;
+    margin: 18px 0; box-shadow: var(--card-shadow); }
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 14px; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 1800px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .rbtn { background: var(--ink); color: var(--paper); border: none; border-radius: 100px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; }
+  .rbtn:hover { background: var(--teal); }
+
+  footer { background: var(--ink); color: rgba(250,249,246,0.55); text-align: center;
+    padding: 32px 20px; font-size: 0.85rem; margin-top: 60px; }
+  footer strong { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 48px 20px 40px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ════ light format (applied Sept 2026): overrides the dark theme above ════ */
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 8 · Friday 02 October 2026</div>
+    <h1>The layer<br><em>is a matrix multiply</em></h1>
+    <p class="lead">On the first day of this course you ran a line called <code>X @ W + b</code> and I told you it was a version check. It was not. Today you find out what you actually computed in week one — and it is one complete layer of a neural network.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 1 · Foundations</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 5 · a layer by hand</span>
+      <span class="tag">Paper before keyboard</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#dot">The dot product</a>
+  <a href="#matmul">Matrix multiply</a>
+  <a href="#reveal">Week one, explained</a>
+  <a href="#batch">A batch</a>
+  <a href="#count">Nine weights</a>
+  <a href="#missing">What is missing</a>
+  <a href="#lab">Lab 5</a>
+  <a href="#next">Before Tuesday</a>
+</div></nav>
+
+<div class="page">
+<!-- ══════════════════════════ DOT ══════════════════════════ -->
+<div class="module-header ink" data-num="1" id="dot">
+  <div class="mod-label">Part 1 · 10 minutes</div>
+  <h2>The dot product: multiply, then add up</h2>
+  <p>One operation. Everything today is built from it, and so is every model in this course.</p>
+</div>
+
+<p>Take two lists of the same length. Multiply them element by element, then add the results into a single number.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>the whole definition</span><span class="code-lang">python</span></div>
+<pre>u = np.<span class="fn">array</span>([<span class="num">1.</span>, <span class="num">2.</span>, <span class="num">3.</span>])
+v = np.<span class="fn">array</span>([<span class="num">4.</span>, <span class="num">5.</span>, <span class="num">6.</span>])
+
+u @ v        <span class="out">→ 32.0</span>
+
+<span class="cm"># by hand:  1×4 + 2×5 + 3×6  =  4 + 10 + 18  =  32</span></pre>
+</div>
+
+<p>Two arrays go in, one number comes out. The <code>@</code> operator is Python's matrix-multiplication symbol; for two 1-D arrays it does exactly the multiply-and-add above.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">💡</div>
+  <div class="callout-body">
+    <strong>Read it as "evidence, weighted"</strong>
+    <p>Think of <code>u</code> as measurements and <code>v</code> as how much each measurement counts. The dot product is the total score. In session 2 you saw a spam filter counting word frequencies into an evidence table — that table is <code>v</code>, the email is <code>u</code>, and this single operation is the whole classifier. You have been looking at dot products since week one without a name for them.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ MATMUL ══════════════════════════ -->
+<div class="module-header sky" data-num="2" id="matmul">
+  <div class="mod-label">Part 2 · 14 minutes</div>
+  <h2>Matrix multiplication is many dot products at once</h2>
+  <p>No new idea. Just bookkeeping about which row meets which column.</p>
+</div>
+
+<p>When <code>A @ B</code> has 2-D arrays on both sides, the entry in row <em>i</em>, column <em>j</em> of the result is the dot product of <strong>row <em>i</em> of A</strong> with <strong>column <em>j</em> of B</strong>. That is the entire rule.</p>
+
+<div class="diagram-wrap">
+<div class="diagram-title">Row of A meets column of B, one dot product per output cell</div>
+<svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  <g font-family="JetBrains Mono" font-size="13">
+    <!-- A -->
+    <text x="60" y="42" font-family="DM Sans" font-size="12" font-weight="600" fill="#475569">A  (1, 2)</text>
+    <rect x="30" y="56" width="56" height="34" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+    <rect x="86" y="56" width="56" height="34" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+    <text x="58"  y="79" text-anchor="middle" fill="#5b21b6">1.0</text>
+    <text x="114" y="79" text-anchor="middle" fill="#5b21b6">2.0</text>
+
+    <text x="160" y="79" font-size="20" fill="#0f0e17">@</text>
+
+    <!-- B -->
+    <text x="290" y="42" font-family="DM Sans" font-size="12" font-weight="600" fill="#475569">W  (2, 3)</text>
+    <rect x="192" y="56" width="66" height="34" rx="5" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+    <rect x="258" y="56" width="66" height="34" rx="5" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.4"/>
+    <rect x="324" y="56" width="66" height="34" rx="5" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.4"/>
+    <rect x="192" y="90" width="66" height="34" rx="5" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+    <rect x="258" y="90" width="66" height="34" rx="5" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.4"/>
+    <rect x="324" y="90" width="66" height="34" rx="5" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.4"/>
+    <text x="225" y="79"  text-anchor="middle" fill="#115e59">0.5</text>
+    <text x="291" y="79"  text-anchor="middle" fill="#075985">-1.0</text>
+    <text x="357" y="79"  text-anchor="middle" fill="#075985">2.0</text>
+    <text x="225" y="113" text-anchor="middle" fill="#115e59">1.5</text>
+    <text x="291" y="113" text-anchor="middle" fill="#075985">0.0</text>
+    <text x="357" y="113" text-anchor="middle" fill="#075985">-0.5</text>
+
+    <text x="410" y="90" font-size="18" fill="#0f0e17">=</text>
+
+    <!-- result -->
+    <text x="510" y="42" font-family="DM Sans" font-size="12" font-weight="600" fill="#475569">(1, 3)</text>
+    <rect x="440" y="72" width="62" height="34" rx="5" fill="#fde68a" stroke="#b45309" stroke-width="2"/>
+    <rect x="502" y="72" width="62" height="34" rx="5" fill="#fff" stroke="#94a3b8" stroke-width="1.4"/>
+    <rect x="564" y="72" width="62" height="34" rx="5" fill="#fff" stroke="#94a3b8" stroke-width="1.4"/>
+    <text x="471" y="95" text-anchor="middle" fill="#78350f">3.5</text>
+    <text x="533" y="95" text-anchor="middle" fill="#64748b">-1.0</text>
+    <text x="595" y="95" text-anchor="middle" fill="#64748b">1.0</text>
+
+    <text x="30" y="168" font-family="DM Sans" font-size="13" fill="#78350f" font-weight="600">The highlighted cell:</text>
+    <text x="30" y="192" font-size="14" fill="#0f0e17">row of A · column 0 of W  =  1.0 × 0.5  +  2.0 × 1.5  =  0.5 + 3.0  =  3.5</text>
+    <text x="30" y="228" font-family="DM Sans" font-size="12.5" fill="#475569">Three output cells, three dot products. Nothing else is happening.</text>
+  </g>
+</svg>
+</div>
+
+<h3>The shape rule — the inner numbers must match</h3>
+
+<div class="bigidea">
+  <div class="bi-label">Memorise this line</div>
+  <p><span class="mono">(n, k) @ (k, m) → (n, m)</span></p>
+  <p>The two inner <em>k</em>s must be equal — that is the length of the dot products. They then vanish, and the outer numbers survive. If you can look at two shapes and say the answer, you can debug three quarters of what goes wrong in unit 2.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>practise reading the shapes</span><span class="code-lang">python</span></div>
+<pre>(<span class="num">4</span>, <span class="num">2</span>) @ (<span class="num">2</span>, <span class="num">3</span>)   <span class="out">→ (4, 3)</span>    <span class="cm"># the 2s match and disappear</span>
+(<span class="num">3</span>, <span class="num">4</span>) @ (<span class="num">4</span>, <span class="num">1</span>)   <span class="out">→ (3, 1)</span>    <span class="cm"># the 4s match</span>
+(<span class="num">2</span>, <span class="num">3</span>) @ (<span class="num">2</span>, <span class="num">3</span>)   <span class="err">→ ValueError</span>  <span class="cm"># 3 ≠ 2. no.</span></pre>
+</div>
+
+<div class="callout warn">
+  <div class="callout-icon">⚠️</div>
+  <div class="callout-body">
+    <strong><code>@</code> and <code>*</code> are different operators. Never confuse them.</strong>
+    <p><code>A * B</code> multiplies element by element and uses <em>broadcasting</em> — Friday's rules. <code>A @ B</code> is matrix multiplication and uses the inner-dimension rule above. They agree on almost nothing, and both will happily run on the same pair of arrays and give you different answers.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ REVEAL ══════════════════════════ -->
+<div class="module-header gold" data-num="3" id="reveal">
+  <div class="mod-label">Part 3 · 16 minutes · the point of the session</div>
+  <h2>What you actually ran in week one</h2>
+  <p>Open your session 1 notebook. It is still there.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>check_setup.py, from session 1 — unchanged</span><span class="code-lang gold">week 1</span></div>
+<pre>X = np.<span class="fn">array</span>([[<span class="num">1.0</span>, <span class="num">2.0</span>]])          <span class="cm"># one example, two features</span>
+W = np.<span class="fn">array</span>([[<span class="num">0.5</span>, <span class="num">-1.0</span>, <span class="num">2.0</span>],
+              [<span class="num">1.5</span>,  <span class="num">0.0</span>, <span class="num">-0.5</span>]])   <span class="cm"># 2 inputs → 3 hidden units</span>
+b = np.<span class="fn">array</span>([<span class="num">0.1</span>, <span class="num">0.1</span>, <span class="num">0.1</span>])
+
+out = X @ W + b
+<span class="out">→ array([[ 3.6, -0.9,  1.1]])</span></pre>
+</div>
+
+<p>You now have every piece needed to read that. Take it apart:</p>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th style="width:14%">Symbol</th><th style="width:14%" class="mono">Shape</th><th>What it is</th></tr></thead>
+  <tbody>
+    <tr><td class="rowlab mono">X</td><td class="mono">(1, 2)</td><td>One example with two features. Rows are examples, columns are features.</td></tr>
+    <tr><td class="rowlab mono">W</td><td class="mono">(2, 3)</td><td>The <strong>weights</strong>. Column <em>j</em> holds the weights of hidden unit <em>j</em> — how much each input counts for that unit. Six numbers, because 2 inputs × 3 units.</td></tr>
+    <tr><td class="rowlab mono">b</td><td class="mono">(3,)</td><td>The <strong>biases</strong>. One per unit — a shift that moves the unit's threshold independently of the inputs. Broadcast across every row, by Friday's rules.</td></tr>
+    <tr><td class="rowlab mono">X @ W + b</td><td class="mono">(1, 3)</td><td>The output of three units, for one example.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>Every number, by hand</h4>
+
+<div class="code-block">
+  <div class="code-header"><span>three dot products, one per unit</span><span class="code-lang">arithmetic</span></div>
+<pre>unit 0:   <span class="num">1.0</span>×<span class="num">0.5</span>  + <span class="num">2.0</span>×<span class="num">1.5</span>   + <span class="num">0.1</span>  =  <span class="num">0.5</span> + <span class="num">3.0</span> + <span class="num">0.1</span>  =  <span class="out">3.6</span>
+unit 1:   <span class="num">1.0</span>×-<span class="num">1.0</span> + <span class="num">2.0</span>×<span class="num">0.0</span>   + <span class="num">0.1</span>  = -<span class="num">1.0</span> + <span class="num">0.0</span> + <span class="num">0.1</span>  = <span class="out">-0.9</span>
+unit 2:   <span class="num">1.0</span>×<span class="num">2.0</span>  + <span class="num">2.0</span>×-<span class="num">0.5</span>  + <span class="num">0.1</span>  =  <span class="num">2.0</span> - <span class="num">1.0</span> + <span class="num">0.1</span>  =  <span class="out">1.1</span>
+
+                                        <span class="out">→ [ 3.6, -0.9, 1.1 ]</span></pre>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">So here is what that line was</div>
+  <p><span class="mono">X @ W + b</span> is <strong>one complete layer of a neural network.</strong></p>
+  <p>Not an analogy. Not a simplified version. That is the operation, exactly as it runs inside every model in this course and inside the frontier models you used last week. The only thing separating that line from a working network is a detail we will add in session 11 — and the numbers, which right now I chose and which from session 10 the machine will choose for itself.</p>
+</div>
+
+<div class="callout info">
+  <div class="callout-icon">🧠</div>
+  <div class="callout-body">
+    <strong>Back to the picture from the orientation deck</strong>
+    <p>Each column of <code>W</code> is one artificial neurone: it collects every input, multiplies each by how much that input counts, adds them up, and adds its own bias. Many inputs, one output, a threshold in between. The biological picture you saw in the orientation talk, and this matrix, are the same object described two ways.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ BATCH ══════════════════════════ -->
+<div class="module-header teal" data-num="4" id="batch">
+  <div class="mod-label">Part 4 · 10 minutes</div>
+  <h2>Four examples cost the same as one</h2>
+  <p>Why the convention is rows-are-examples, and why nothing in your code has to change.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>stack four examples as four rows — W and b untouched</span><span class="code-lang">python</span></div>
+<pre>Xb = np.<span class="fn">array</span>([[ <span class="num">1.</span>, <span class="num">2.</span>],
+               [ <span class="num">0.</span>, <span class="num">1.</span>],
+               [ <span class="num">2.</span>, <span class="num">0.</span>],
+               [-<span class="num">1.</span>, <span class="num">3.</span>]])        <span class="cm"># shape (4, 2)</span>
+
+Xb @ W + b
+<span class="out">→ array([[ 3.6, -0.9,  1.1],
+         [ 1.6,  0.1, -0.4],
+         [ 1.1, -1.9,  4.1],
+         [ 4.1,  1.1, -3.4]])</span>      <span class="cm"># shape (4, 3)</span></pre>
+</div>
+
+<p>The first row is identical to before — same example, same answer. The code did not change at all: <code>(4,2) @ (2,3) → (4,3)</code>, and <code>b</code> of shape <code>(3,)</code> broadcasts across all four rows exactly as Friday's first table said it would.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">⚡</div>
+  <div class="callout-body">
+    <strong>This is the whole reason for the convention</strong>
+    <p>Sixty thousand examples is <code>(60000, 784) @ (784, 128)</code> — one call, no loop over examples, and the processor works on the whole block at once. Rows-are-examples is not an arbitrary style choice; it is what lets a batch cost barely more than a single case. When session 16 asks for a mini-batch of 32, it will be <code>X[i:i+32]</code> — Tuesday's slicing, and nothing more.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ COUNT ══════════════════════════ -->
+<div class="module-header violet" data-num="5" id="count">
+  <div class="mod-label">Part 5 · 10 minutes</div>
+  <h2>Nine weights and four biases — where those numbers come from</h2>
+  <p>The network from the orientation deck, counted from its shapes.</p>
+</div>
+
+<p>A network with 2 inputs, 3 hidden units and 1 output. Two layers, each one <code>@</code> and a <code>+</code>:</p>
+
+<div class="code-block">
+  <div class="code-header"><span>the shape chain — the second layer is the same operation again</span><span class="code-lang">python</span></div>
+<pre>W1, b1 = shape (<span class="num">2</span>, <span class="num">3</span>), shape (<span class="num">3</span>,)     <span class="cm"># inputs  → hidden</span>
+W2, b2 = shape (<span class="num">3</span>, <span class="num">1</span>), shape (<span class="num">1</span>,)     <span class="cm"># hidden  → output</span>
+
+h = Xb @ W1 + b1     <span class="cm"># (4, 2) @ (2, 3) → (4, 3)</span>
+o = h  @ W2 + b2     <span class="cm"># (4, 3) @ (3, 1) → (4, 1)</span>
+
+<span class="cm"># four examples in, four predictions out</span></pre>
+</div>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th></th><th class="mono">Shape</th><th class="mono">Count</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td class="rowlab">W1</td><td class="mono">(2, 3)</td><td class="mono">6</td><td>One weight per connection from an input to a hidden unit</td></tr>
+    <tr><td class="rowlab">W2</td><td class="mono">(3, 1)</td><td class="mono">3</td><td>One weight per connection from a hidden unit to the output</td></tr>
+    <tr><td class="rowlab">b1</td><td class="mono">(3,)</td><td class="mono">3</td><td>One bias per hidden unit</td></tr>
+    <tr><td class="rowlab">b2</td><td class="mono">(1,)</td><td class="mono">1</td><td>One bias for the output unit</td></tr>
+    <tr><td class="rowlab"><strong>Total</strong></td><td></td><td class="mono ok"><strong>9 weights · 4 biases</strong></td><td>One weight per line, one bias per unit</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout info">
+  <div class="callout-icon">📊</div>
+  <div class="callout-body">
+    <strong>Thirteen numbers here. Hundreds of billions there.</strong>
+    <p>A frontier language model is this same pair of quantities — weights and biases — at a scale about ten billion times larger, arranged in more layers. Not a different kind of thing. When you hear "a 70-billion-parameter model", it means 70 billion entries in matrices exactly like <code>W1</code>, every one of them found by the procedure you will write in session 14.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ MISSING ══════════════════════════ -->
+<div class="module-header rose" data-num="6" id="missing">
+  <div class="mod-label">Part 6 · 8 minutes</div>
+  <h2>What is still missing — and why it matters more than it looks</h2>
+  <p>Two stacked layers, right now, are worth exactly one. Here is the proof.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>run this — the result is not a rounding artefact</span><span class="code-lang">python</span></div>
+<pre>rng = np.random.<span class="fn">default_rng</span>(<span class="num">1</span>)
+A = rng.<span class="fn">normal</span>(size=(<span class="num">2</span>, <span class="num">3</span>))
+B = rng.<span class="fn">normal</span>(size=(<span class="num">3</span>, <span class="num">1</span>))
+x = np.<span class="fn">array</span>([[<span class="num">1.</span>, <span class="num">2.</span>]])
+
+x @ A @ B          <span class="out">→ [[3.1895]]</span>    <span class="cm"># two layers</span>
+
+C = A @ B          <span class="cm"># collapse them into ONE matrix, shape (2, 1)</span>
+x @ C              <span class="out">→ [[3.1895]]</span>    <span class="cm"># one layer — identical</span>
+
+np.<span class="fn">allclose</span>(x @ A @ B, x @ C)   <span class="out">→ True</span></pre>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">A hundred stacked layers would gain you nothing</div>
+  <p>Two matrix multiplies in a row can always be replaced by a single matrix. So can a hundred. As written, "deep" learning would be exactly as powerful as one layer — a chain of straight lines is still a straight line.</p>
+  <p>The fix is one small non-linear step applied after each layer, called an <strong>activation</strong>. It is a single line of code, you meet it in session 11, and it is the entire reason depth means anything at all.</p>
+</div>
+
+<p>So the honest state of play: you can now compute a layer, you can batch it, and you know why stacking is currently pointless. Session 11 supplies the missing bend. Sessions 10 and 11 supply the thing that actually matters more — how the numbers in <code>W</code> stop being ones I chose and start being ones the machine found.</p>
+
+<!-- ══════════════════════════ LAB ══════════════════════════ -->
+<div class="module-header teal" data-num="7" id="lab">
+  <div class="mod-label">Lab 5 · 18 minutes in class</div>
+  <h2>A layer by hand, then in one line</h2>
+</div>
+
+<p>Lab 5 is a separate handout — <code>CSC4315_Lab05_A_Layer_By_Hand.html</code>. Paper first, then code, then check the two agree digit for digit. That order is the method for the entire rest of this course, and this is the session where it starts.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">✅</div>
+  <div class="callout-body">
+    <strong>Same rules</strong>
+    <p>Finish in the room, hand up after three minutes. Nothing in Lab 5 is a prerequisite for Tuesday — but this is the first lab where the hand computation genuinely matters, because session 13 asks you to do the same thing on a network four times the size.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ NEXT ══════════════════════════ -->
+<h3 id="next">Before Tuesday</h3>
+
+<ol>
+  <li><strong>Finish Lab 5</strong>, including the photograph of your paper working. The paper is the part I care about.</li>
+  <li><strong>Drill the shape rule until it is instant.</strong> Say the result, or "error", for each: <code>(8,3)@(3,5)</code> · <code>(5,5)@(5,1)</code> · <code>(2,4)@(2,4)</code> · <code>(1,7)@(7,7)</code> · <code>(6,2)@(3,2)</code>. You should not need to think about these by Tuesday.</li>
+  <li><strong>Read one sentence and sit with it.</strong> Every number in <code>W</code> was chosen by me, arbitrarily. Tuesday is about what it would mean for a machine to choose them instead — and it begins with a curve you already plotted in Lab 4.</li>
+</ol>
+
+<div class="callout tip">
+  <div class="callout-icon">➡️</div>
+  <div class="callout-body">
+    <strong>Session 9 — Tuesday 06 October, 16:00</strong>
+    <p><em>Slope, the chain rule, and gradient descent by hand.</em> We minimise <em>f(x) = x²</em> with a pencil, five steps, then in three lines of code — and then watch what happens when the learning rate is too small, too large, and right. It is the last session of unit 1, and it is the one that makes training stop being magic.</p>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 8 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 6 — NumPy I: Arrays and Shapes</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #faf9f6; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fde68a;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 4px 24px rgba(15,14,23,0.08);
+    --card-shadow-hover: 0 12px 40px rgba(15,14,23,0.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  .hero { background: var(--ink); color: var(--paper); padding: 76px 40px 56px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 76% 24%, rgba(13,148,136,0.36) 0%, transparent 58%),
+                radial-gradient(ellipse at 14% 84%, rgba(2,132,199,0.3) 0%, transparent 55%),
+                radial-gradient(ellipse at 94% 94%, rgba(232,168,56,0.22) 0%, transparent 50%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: rgba(232,168,56,0.2); border: 1px solid var(--gold);
+    color: var(--gold-light); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { font-size: 1.12rem; color: rgba(250,249,246,0.78); max-width: 660px; margin-bottom: 32px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--paper); padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.1); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; }
+  .toc a { color: rgba(250,249,246,0.65); text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    padding: 14px 15px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  .module-header { margin: 56px 0 28px; padding: 30px 34px; border-radius: 16px; position: relative; overflow: hidden; }
+  .module-header.teal { background: var(--teal); }
+  .module-header.violet { background: var(--violet); }
+  .module-header.gold { background: #92400e; }
+  .module-header.sky { background: #075985; }
+  .module-header.rose { background: #9f1239; }
+  .module-header.ink { background: var(--ink); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', serif; font-size: 5rem;
+    font-weight: 900; color: rgba(255,255,255,0.12); line-height: 1; }
+  .module-header .mod-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .module-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+    color: #fff; line-height: 1.2; }
+  .module-header p { color: rgba(255,255,255,0.82); margin-top: 8px; font-size: 0.97rem; max-width: 620px; }
+
+  h3 { font-family: 'Playfair Display', serif; font-size: 1.32rem; font-weight: 700; margin: 38px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    box-shadow: var(--card-shadow); transition: box-shadow 0.25s, transform 0.25s; }
+  .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-3px); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 14px; box-shadow: var(--card-shadow); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--ink); color: var(--paper); }
+  thead th { padding: 13px 15px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 12px 15px; font-size: 0.88rem; vertical-align: top; }
+  tbody tr:hover { background: var(--cream); }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip { background: var(--teal-light); border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3; border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light); border-left: 4px solid var(--sky); }
+  .callout.try { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light); border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body strong { display: block; margin-bottom: 4px; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: var(--gold-light); border: 1px solid #d9a441; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 24px 28px; margin: 28px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.05rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+  .bigidea p + p { margin-top: 12px; }
+
+  .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 18px 0; box-shadow: var(--card-shadow); }
+  .code-header { background: #2a2a3d; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .code-header span { color: rgba(255,255,255,0.55); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal); color: #fff; font-size: 0.7rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .code-lang.shell { background: var(--slate); }
+  .code-lang.bad { background: var(--rose); }
+  pre { padding: 20px 22px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; line-height: 1.65; color: #cdd6f4; }
+  .kw { color: #cba6f7; } .str { color: #a6e3a1; } .cm { color: #6c7086; font-style: italic; }
+  .fn { color: #89b4fa; } .num { color: #fab387; } .var { color: #f38ba8; } .out { color: #f9e2af; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    margin: 24px 0; box-shadow: var(--card-shadow); overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  .step-list { list-style: none; margin: 16px 0; }
+  .step-list li { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; flex-shrink: 0; }
+  .step-text strong { display: block; margin-bottom: 3px; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 16px; margin: 26px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center;
+    box-shadow: var(--card-shadow); }
+  .stat .big { font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.05; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--slate); margin-top: 8px; }
+  .stat.alert .big { color: var(--rose); }
+  .stat.good .big { color: var(--teal); }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 2px 6px; border-radius: 5px; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px;
+    margin: 18px 0; box-shadow: var(--card-shadow); }
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 14px; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 1800px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .rbtn { background: var(--ink); color: var(--paper); border: none; border-radius: 100px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; }
+  .rbtn:hover { background: var(--teal); }
+
+  footer { background: var(--ink); color: rgba(250,249,246,0.55); text-align: center;
+    padding: 32px 20px; font-size: 0.85rem; margin-top: 60px; }
+  footer strong { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 48px 20px 40px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ════ light format (applied Sept 2026): overrides the dark theme above ════ */
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 6 · Friday 25 September 2026</div>
+    <h1>NumPy I:<br><em>arrays and shapes</em></h1>
+    <p class="lead">Tuesday ended at a wall: <code>2 * xs</code> repeated the list instead of doubling it. Today that line starts working, your grid becomes a real two-dimensional object, and you meet <code>.shape</code> — which from now until December is the first thing you print whenever anything goes wrong.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 1 · Foundations</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 3 · predict every shape</span>
+      <span class="tag">Laptops open</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#recap">Where we are</a>
+  <a href="#array">The import</a>
+  <a href="#shape">Shape</a>
+  <a href="#twod">Two dimensions</a>
+  <a href="#vector">Name the operation</a>
+  <a href="#axis">Which axis</a>
+  <a href="#views">Slices are windows</a>
+  <a href="#lab">Lab 3</a>
+  <a href="#next">Before Tuesday</a>
+</div></nav>
+
+<div class="page">
+
+<!-- ══════════════════════════ RECAP ══════════════════════════ -->
+<h3 id="recap">Where we are</h3>
+
+<p>Two sessions of Python behind you. You can write a function, walk a list with an accumulator, slice, and build a grid out of nested lists. That is genuinely everything the language side of this course needs.</p>
+
+<p>You also hit a wall on Tuesday, and it was not an accident — it was the last five minutes of the session by design. A list is a general-purpose container: it will hold numbers, text, other lists, all at once. Because it cannot assume its contents are numbers, <code>*</code> and <code>+</code> mean the only things that make sense for any container at all — repeat and join. Arithmetic on every element is not something a list is allowed to guess at.</p>
+
+<div class="bigidea">
+  <div class="bi-label">Today, in one sentence</div>
+  <p>An <strong>array</strong> is a container that <em>does</em> assume every element is a number of the same kind. That single assumption buys you three things: arithmetic that means what you want, two-dimensional indexing that reads like mathematics, and a hundredfold speed-up. Everything else today is consequences of it.</p>
+</div>
+<!-- ══════════════════════════ ARRAY ══════════════════════════ -->
+<div class="module-header ink" data-num="1" id="array">
+  <div class="mod-label">Part 1 · 10 minutes</div>
+  <h2>One import, and the wall comes down</h2>
+  <p>Everything that failed on Tuesday now works. Then we ask what changed, because the answer explains the rest of the semester.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>the first cell of every notebook from here on</span><span class="code-lang">python</span></div>
+<pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+a = np.<span class="fn">array</span>([<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>, <span class="num">60</span>])
+
+<span class="num">2</span> * a         <span class="out">→ array([ 20,  40,  60,  80, 100, 120])</span>   <span class="cm"># doubled. finally.</span>
+a + <span class="num">10</span>        <span class="out">→ array([20, 30, 40, 50, 60, 70])</span>
+a ** <span class="num">2</span>        <span class="out">→ array([ 100,  400,  900, 1600, 2500, 3600])</span>
+a[<span class="num">2</span>:<span class="num">4</span>]        <span class="out">→ array([30, 40])</span>   <span class="cm"># slicing: identical to Tuesday</span></pre>
+</div>
+
+<p>Note the last line. Slicing did not change. Everything you learned about fenceposts on Tuesday transfers unmodified — which is why we spent ten minutes on it.</p>
+
+<h3>What actually changed</h3>
+
+<p>A Python list can hold anything: a number, a string, another list, all at once. That generality is why <code>*</code> could only mean "repeat" — the list has no idea whether arithmetic is meaningful for its contents.</p>
+
+<p>A NumPy array gives up that generality in exchange for three things:</p>
+
+<div class="card-grid">
+  <div class="card"><div class="card-icon">🔢</div><h4>One type for everything</h4><p>Every element is the same type — the <code>dtype</code>. Usually <code>float64</code> in this course. The array knows arithmetic is meaningful because it knows what it holds.</p></div>
+  <div class="card"><div class="card-icon">📦</div><h4>One contiguous block of memory</h4><p>A list holds pointers scattered across memory. An array is one unbroken run of bytes, which is what lets the processor work on many at once.</p></div>
+  <div class="card"><div class="card-icon">⚡</div><h4>The loop moves into C</h4><p><code>a ** 2</code> still loops over every element — but in compiled code, not in Python. That single fact is the ~100× you are about to measure.</p></div>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>the dtype is worth watching</span><span class="code-lang">python</span></div>
+<pre>a = np.<span class="fn">array</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>])
+a.dtype              <span class="out">→ dtype('int64')</span>      <span class="cm"># whole numbers in, integers out</span>
+(a / <span class="num">2</span>).dtype        <span class="out">→ dtype('float64')</span>    <span class="cm"># division always promotes</span>
+a.<span class="fn">astype</span>(<span class="fn">float</span>).dtype  <span class="out">→ dtype('float64')</span>    <span class="cm"># force it when you need to</span>
+
+<span class="cm"># making arrays without a list</span>
+np.<span class="fn">zeros</span>((<span class="num">2</span>, <span class="num">3</span>))       <span class="cm"># 2 rows, 3 columns, all 0.0</span>
+np.<span class="fn">arange</span>(<span class="num">0</span>, <span class="num">1</span>, <span class="num">0.25</span>)  <span class="out">→ array([0.  , 0.25, 0.5 , 0.75])</span>   <span class="cm"># stop excluded</span>
+np.<span class="fn">linspace</span>(-<span class="num">3</span>, <span class="num">3</span>, <span class="num">61</span>) <span class="cm"># 61 points, both ends included</span></pre>
+</div>
+
+<div class="callout tip">
+  <div class="callout-icon">🔁</div>
+  <div class="callout-body">
+    <strong>Tuesday's line, replaced</strong>
+    <p>You wrote <code>xs = [i/10 for i in range(-30, 31)]</code> and I said the workaround would disappear. It has: <code>np.linspace(-3, 3, 61)</code>. Say what you want — start, stop, how many — instead of describing how to count there.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ SHAPE ══════════════════════════ -->
+<div class="module-header sky" data-num="2" id="shape">
+  <div class="mod-label">Part 2 · 14 minutes</div>
+  <h2>Shape is the thing you debug</h2>
+  <p>For the next twenty sessions, when something breaks, the first question is always the same: what shape is it?</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>a 2-D array, and its vital statistics</span><span class="code-lang">python</span></div>
+<pre>X = np.<span class="fn">arange</span>(<span class="num">12</span>).<span class="fn">reshape</span>(<span class="num">3</span>, <span class="num">4</span>)
+<span class="out">array([[ 0,  1,  2,  3],
+       [ 4,  5,  6,  7],
+       [ 8,  9, 10, 11]])</span>
+
+X.shape    <span class="out">→ (3, 4)</span>   <span class="cm"># a TUPLE — Tuesday's tuples, doing real work</span>
+X.ndim     <span class="out">→ 2</span>        <span class="cm"># how many dimensions</span>
+X.size     <span class="out">→ 12</span>       <span class="cm"># how many numbers in total</span></pre>
+</div>
+
+<p>Read <code>(3, 4)</code> as <strong>3 rows, 4 columns</strong> — and in this course, almost always, <strong>3 examples with 4 features each</strong>. That convention holds from here to session 26. In session 23 you will handle images shaped <code>(60000, 784)</code>: sixty thousand examples, seven hundred and eighty-four pixels each.</p>
+
+<h3>Slicing gains a second dimension — and nothing else is new</h3>
+
+<div class="code-block">
+  <div class="code-header"><span>one slice per dimension, separated by a comma</span><span class="code-lang">python</span></div>
+<pre>X[<span class="num">0</span>:<span class="num">2</span>, <span class="num">1</span>:<span class="num">3</span>]   <span class="cm"># rows 0-2, columns 1-3</span>
+<span class="out">→ array([[1, 2],
+         [5, 6]])</span>
+
+X[:, <span class="num">0</span>]      <span class="out">→ array([0, 4, 8])</span>       <span class="cm"># every row, column 0    shape (3,)</span>
+X[<span class="num">1</span>, :]      <span class="out">→ array([4, 5, 6, 7])</span>    <span class="cm"># row 1, every column    shape (4,)</span>
+X[:, <span class="num">0</span>:<span class="num">1</span>]    <span class="cm"># every row, columns 0-1                    shape (3, 1)</span></pre>
+</div>
+
+<div class="callout stop">
+  <div class="callout-icon">🎯</div>
+  <div class="callout-body">
+    <strong>Look hard at the last two lines</strong>
+    <p><code>X[:, 0]</code> has shape <code>(3,)</code>. <code>X[:, 0:1]</code> has shape <code>(3, 1)</code>. Same six numbers, different shape. An index removes a dimension; a slice keeps it.</p>
+    <p>That distinction looks pedantic right now. In eleven minutes it will silently give you a wrong answer with no error message, and I want you to have seen it first.</p>
+  </div>
+</div>
+
+<h4>Reshape, and the <code>-1</code> that means "work it out"</h4>
+
+<div class="code-block">
+  <div class="code-header"><span>reshape</span><span class="code-lang">python</span></div>
+<pre>X = np.<span class="fn">arange</span>(<span class="num">12</span>)
+
+X.<span class="fn">reshape</span>(<span class="num">3</span>, <span class="num">4</span>).shape    <span class="out">→ (3, 4)</span>
+X.<span class="fn">reshape</span>(<span class="num">3</span>, -<span class="num">1</span>).shape   <span class="out">→ (3, 4)</span>   <span class="cm"># "3 rows, you figure out the columns"</span>
+X.<span class="fn">reshape</span>(-<span class="num">1</span>, <span class="num">2</span>).shape   <span class="out">→ (6, 2)</span>   <span class="cm"># "2 columns, you figure out the rows"</span></pre>
+</div>
+
+<p>You may use <code>-1</code> in exactly one position. It is not a magic value; it means "solve for this one so the total stays 12". You will write <code>.reshape(-1, 1)</code> more often than any other reshape in this course.</p>
+
+
+<!-- ══════════════════════════ TWOD ══════════════════════════ -->
+<div class="module-header gold" data-num="3" id="twod">
+  <div class="mod-label">Part 3 · 12 minutes</div>
+  <h2>Two dimensions, and the comma that replaces two brackets</h2>
+  <p>Tuesday's grid, done properly. This is the notation the rest of the course is written in.</p>
+</div>
+
+<p>A nested list becomes a two-dimensional array in one call, and the moment it does, the indexing changes.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>the same grid, before and after</span><span class="code-lang">python</span></div>
+<pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+grid = [[<span class="num">4</span>, <span class="num">7</span>, <span class="num">2</span>],
+        [<span class="num">9</span>, <span class="num">1</span>, <span class="num">8</span>],
+        [<span class="num">3</span>, <span class="num">6</span>, <span class="num">5</span>]]
+
+a = np.<span class="fn">array</span>(grid)
+
+grid[<span class="num">1</span>][<span class="num">0</span>]      <span class="cm"># 9   the list way — two separate lookups</span>
+a[<span class="num">1</span>, <span class="num">0</span>]        <span class="cm"># 9   the array way — one lookup, two indices</span>
+a.shape         <span class="cm"># (3, 3)  three rows, three columns</span></pre>
+</div>
+
+<p>The comma is not cosmetic. <code>grid[1][0]</code> fetches row 1 as a whole list and then indexes into it; <code>a[1, 0]</code> asks for one element by its position in two dimensions, which is why the next thing works and the list version does not.</p>
+
+<h3>A whole row, and a whole column</h3>
+
+<div class="code-block">
+  <div class="code-header"><span>the colon means "everything along this axis"</span><span class="code-lang">python</span></div>
+<pre>a[<span class="num">1</span>, :]      <span class="cm"># [9, 1, 8]   row 1, every column</span>
+a[<span class="num">1</span>]         <span class="cm"># [9, 1, 8]   the same thing, shorter</span>
+a[:, <span class="num">0</span>]      <span class="cm"># [4, 9, 3]   every row, column 0  ← try this with a list</span>
+a[:, <span class="num">1</span>:]     <span class="cm"># the last two columns of every row</span>
+a[<span class="num">0</span>:<span class="num">2</span>, <span class="num">0</span>:<span class="num">2</span>]  <span class="cm"># the top-left 2x2 corner</span></pre>
+</div>
+
+<div class="callout tip">
+  <div class="callout-icon">🎯</div>
+  <div class="callout-body">
+    <strong><code>a[:, 0]</code> is the line to remember</strong>
+    <p>Getting a whole column out of a list of lists takes a loop. Here it takes four characters. Read it left to right as "every row, column zero". When you meet a colour image in session 23, <code>img[:, :, 0]</code> will mean "every row, every column, the red channel" — the same idea with one more axis, and you will already know how to read it.</p>
+  </div>
+</div>
+
+<h3>Slicing rules did not change</h3>
+
+<p>Everything from Tuesday still holds: half-open, so <code>0:2</code> gives two rows; negative indices count from the end; and the length of a slice is stop minus start. The only new thing is that you can now do it along both axes at once, separated by a comma.</p>
+
+<div class="code-block">
+  <div class="code-header"><span>predict each shape before running — this is Lab 3 in miniature</span><span class="code-lang">python</span></div>
+<pre>a.shape        <span class="cm"># (3, 3)</span>
+a[<span class="num">0</span>].shape     <span class="cm"># (3,)    one row — one dimension, not two</span>
+a[:, <span class="num">0</span>].shape  <span class="cm"># (3,)    one column — also one dimension</span>
+a[<span class="num">0</span>:<span class="num">1</span>].shape   <span class="cm"># (1, 3)  a slice keeps the dimension; an index removes it</span>
+a[<span class="num">1</span>, <span class="num">1</span>].shape  <span class="cm"># ()      a single number has no shape at all</span></pre>
+</div>
+
+<div class="callout warn">
+  <div class="callout-icon">🕳️</div>
+  <div class="callout-body">
+    <strong>The distinction that will cost you an hour in session 13</strong>
+    <p><code>a[0]</code> has shape <code>(3,)</code> but <code>a[0:1]</code> has shape <code>(1, 3)</code>. Indexing with a number <em>removes</em> that axis; slicing <em>keeps</em> it, even when the slice is one element long. Both contain the same three numbers. They will not multiply the same way, and the error message you get will be about shapes rather than about this.</p>
+  </div>
+</div>
+
+<h3>Building arrays without typing them</h3>
+
+<div class="code-block">
+  <div class="code-header"><span class="code-lang">python</span></div>
+<pre>np.<span class="fn">zeros</span>((<span class="num">2</span>, <span class="num">3</span>))       <span class="cm"># 2x3 of 0.0 — note the shape is one argument, a tuple</span>
+np.<span class="fn">ones</span>((<span class="num">3</span>, <span class="num">3</span>))
+np.<span class="fn">arange</span>(<span class="num">6</span>)          <span class="cm"># [0 1 2 3 4 5]   like range, but an array</span>
+np.<span class="fn">arange</span>(<span class="num">6</span>).<span class="fn">reshape</span>(<span class="num">2</span>, <span class="num">3</span>)
+                       <span class="cm"># [[0 1 2]</span>
+                       <span class="cm">  [3 4 5]]  same six numbers, different shape</span></pre>
+</div>
+
+<p><code>reshape</code> does not move any numbers; it changes how the same six values are addressed. That is why <code>reshape(2, 3)</code> works and <code>reshape(2, 4)</code> raises an error — six numbers cannot be arranged into eight slots, and NumPy tells you so rather than guessing.</p>
+
+<div class="callout info">
+  <div class="callout-icon">✍️</div>
+  <div class="callout-body">
+    <strong>Do this now — two minutes</strong>
+    <p>Make <code>b = np.arange(12).reshape(3, 4)</code>. Without running anything, write down what these five give: <code>b.shape</code>, <code>b[2, 3]</code>, <code>b[:, 1]</code>, <code>b[1:, 2:]</code>, <code>b[0].shape</code>. Then check. Anything you got wrong is worth two minutes now rather than twenty in session 13.</p>
+  </div>
+</div>
+<!-- ══════════════════════════ VECTORISING ══════════════════════════ -->
+<div class="module-header teal" data-num="4" id="vector">
+  <div class="mod-label">Part 4 · 10 minutes</div>
+  <h2>Stop visiting elements. Name the operation.</h2>
+  <p>The mental shift that makes everything after session 9 possible.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>the same job, two ways of thinking</span><span class="code-lang">python</span></div>
+<pre><span class="cm"># thinking about elements — "visit each one and do this to it"</span>
+out = []
+<span class="kw">for</span> x <span class="kw">in</span> xs:
+    out.<span class="fn">append</span>(x * x)
+
+<span class="cm"># thinking about the whole array — "square it"</span>
+out = xs ** <span class="num">2</span></pre>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">The habit to build starting today</div>
+  <p>If you are writing <code>for</code> over the elements of an array, stop and ask what operation you are describing. There is almost always a name for it, and the named version is both shorter and roughly a hundred times faster.</p>
+  <p>This is not about elegance. Session 16 trains a network for ninety passes over a dataset. At loop speed that is an afternoon; vectorised it is a coffee. You will iterate on your model ten times as often, which is the actual reason your results will be better.</p>
+</div>
+
+<p>Measured on an ordinary laptop, one million numbers, each job done both ways:</p>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th>Task</th><th class="mono">Python</th><th class="mono">NumPy</th><th class="mono">Speed-up</th></tr></thead>
+  <tbody>
+    <tr><td class="rowlab">Square every element</td><td class="mono">57.3 ms</td><td class="mono ok">0.73 ms</td><td class="mono">78×</td></tr>
+    <tr><td class="rowlab">Sum all elements</td><td class="mono">36.4 ms</td><td class="mono ok">0.36 ms</td><td class="mono">100×</td></tr>
+    <tr><td class="rowlab">Dot product of two vectors</td><td class="mono">97.7 ms</td><td class="mono ok">0.60 ms</td><td class="mono">163×</td></tr>
+    <tr><td class="rowlab">Rescale to the range 0–1</td><td class="mono">139.3 ms</td><td class="mono ok">2.29 ms</td><td class="mono">61×</td></tr>
+    <tr><td class="rowlab">Count elements above 0.5</td><td class="mono">42.3 ms</td><td class="mono ok">0.77 ms</td><td class="mono">55×</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <div class="callout-icon">🐌</div>
+  <div class="callout-body">
+    <strong>A real mistake, made while preparing this table</strong>
+    <p>The first version of the rescaling task was <code>[(x - min(xs)) / (max(xs) - min(xs)) for x in xs]</code>. It looks fine. It never finished, and I killed it after several minutes.</p>
+    <p><code>min(xs)</code> is inside the loop, so it is recomputed for every one of a million elements — a million passes over a million elements. The comprehension hid an accidental one-trillion-operation job behind one readable line. Hoisting <code>min</code> and <code>max</code> out gave the 139 ms above. <strong>Watch for work that does not depend on the loop variable sitting inside the loop.</strong> NumPy sidesteps this entirely: <code>(xs - xs.min()) / (xs.max() - xs.min())</code> evaluates each once, because you named the operation instead of describing the visit.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ AXIS ══════════════════════════ -->
+<div class="module-header gold" data-num="5" id="axis">
+  <div class="mod-label">Part 5 · 8 minutes</div>
+  <h2><code>axis=0</code> or <code>axis=1</code>?</h2>
+  <p>Everyone guesses wrong at first. One sentence fixes it permanently.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>same array, three different sums</span><span class="code-lang">python</span></div>
+<pre>X = np.<span class="fn">arange</span>(<span class="num">12</span>).<span class="fn">reshape</span>(<span class="num">3</span>, <span class="num">4</span>)     <span class="cm"># shape (3, 4)</span>
+
+X.<span class="fn">sum</span>()          <span class="out">→ 66</span>                    <span class="cm"># everything          shape ()</span>
+X.<span class="fn">sum</span>(axis=<span class="num">0</span>)    <span class="out">→ array([12, 15, 18, 21])</span>  <span class="cm"># shape (4,)</span>
+X.<span class="fn">sum</span>(axis=<span class="num">1</span>)    <span class="out">→ array([ 6, 22, 38])</span>      <span class="cm"># shape (3,)</span></pre>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">The sentence that ends the confusion</div>
+  <p><code>axis=k</code> is the axis that <strong>disappears</strong>.</p>
+  <p><code>X</code> is <code>(3, 4)</code>. Sum with <code>axis=0</code> and the 3 vanishes, leaving <code>(4,)</code> — one number per column. Sum with <code>axis=1</code> and the 4 vanishes, leaving <code>(3,)</code> — one number per row. Do not ask "which direction does it sum"; ask "which number do I want gone".</p>
+</div>
+
+<p>In our convention rows are examples and columns are features, so <code>axis=0</code> gives you something per feature — the mean of each column is exactly what you need to standardise a dataset in session 20 — and <code>axis=1</code> gives you something per example, which is how you get one loss value per training case.</p>
+
+
+<!-- ══════════════════════════ VIEWS ══════════════════════════ -->
+<div class="module-header ink" data-num="6" id="views">
+  <div class="mod-label">Part 6 · 4 minutes</div>
+  <h2>A slice is a window, not a copy</h2>
+</div>
+<!-- ══════════════════════════ VIEWS ══════════════════════════ -->
+<h3 id="views">One callback: Tuesday's aliasing trap, now worse</h3>
+
+<p>On Tuesday <code>b = a</code> made a second label on the same list. With arrays, a <em>slice</em> does it too:</p>
+
+<div class="code-block">
+  <div class="code-header"><span>a slice is a view onto the same memory</span><span class="code-lang">python</span></div>
+<pre>A = np.<span class="fn">arange</span>(<span class="num">6</span>).<span class="fn">reshape</span>(<span class="num">2</span>, <span class="num">3</span>)
+row = A[<span class="num">0</span>]           <span class="cm"># a VIEW, not a copy</span>
+row[<span class="num">0</span>] = <span class="num">99</span>
+<span class="fn">print</span>(A)             <span class="out">→ [[99  1  2]
+                        [ 3  4  5]]</span>   <span class="cm"># A changed</span>
+
+B = np.<span class="fn">arange</span>(<span class="num">6</span>).<span class="fn">reshape</span>(<span class="num">2</span>, <span class="num">3</span>)
+row = B[<span class="num">0</span>].<span class="fn">copy</span>()    <span class="cm"># an actual copy</span>
+row[<span class="num">0</span>] = <span class="num">99</span>
+<span class="fn">print</span>(B)             <span class="out">→ [[0 1 2]
+                        [3 4 5]]</span>      <span class="cm"># B untouched</span></pre>
+</div>
+
+<p>Views are a feature, not a flaw — they are why slicing a 60,000-row dataset costs nothing. But when you intend to modify, use <code>.copy()</code> and mean it.</p>
+
+
+<!-- ══════════════════════════ LAB ══════════════════════════ -->
+<div class="module-header teal" data-num="7" id="lab">
+  <div class="mod-label">Lab 3 · 16 minutes in class</div>
+  <h2>Predict every shape before you run the cell</h2>
+</div>
+
+<p>Lab 3 is a separate handout — <code>CSC4315_Lab03_Arrays_And_Shapes.html</code>, or the printed copy. It is mostly not a coding lab: you write down what you expect each line to produce, then run it and mark yourself. That sounds like less work than writing code and is worth considerably more, because shape errors are the single thing that will slow you down between now and December.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">✅</div>
+  <div class="callout-body">
+    <strong>Same rules</strong>
+    <p>Finish in the room, hand up after three minutes, and nothing here is a prerequisite for Tuesday. Session 7 begins from the same starting point for everyone.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ NEXT ══════════════════════════ -->
+<h3 id="next">Before Tuesday</h3>
+
+<ol>
+  <li><strong>Finish Lab 3</strong>, especially the prediction column. The value is in having committed to an answer before seeing the truth.</li>
+  <li><strong>Re-do Lab 2's <code>row_totals</code> in NumPy</strong> — it is now one line, <code>a.sum(axis=1)</code>. Run both versions on the same grid and confirm they agree. Then look at the two pieces of code side by side and notice how much of Tuesday's version was bookkeeping rather than mathematics.</li>
+  <li><strong>Print <code>.shape</code> of five things</strong> you make up. Get into the habit now, while nothing depends on it.</li>
+</ol>
+
+<div class="callout tip">
+  <div class="callout-icon">➡️</div>
+  <div class="callout-body">
+    <strong>Session 7 — Tuesday 29 September, 16:00</strong>
+    <p><em>NumPy II: broadcasting, and plotting what you compute.</em> Broadcasting is the rule that lets arrays of different shapes work together — it is what makes <code>x - x.mean()</code> legal and what makes half of all shape errors happen. Then Matplotlib, kept to the three plot types this course needs, so that from session 8 onward we can look at a curve instead of describing one.</p>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 6 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

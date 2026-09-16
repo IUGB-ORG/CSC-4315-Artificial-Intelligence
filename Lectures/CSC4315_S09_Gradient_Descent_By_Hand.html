@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 9 — Gradient Descent by Hand</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #faf9f6; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fde68a;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 4px 24px rgba(15,14,23,0.08);
+    --card-shadow-hover: 0 12px 40px rgba(15,14,23,0.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  .hero { background: var(--ink); color: var(--paper); padding: 76px 40px 56px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 74% 24%, rgba(232,168,56,0.32) 0%, transparent 58%),
+                radial-gradient(ellipse at 14% 86%, rgba(124,58,237,0.32) 0%, transparent 55%),
+                radial-gradient(ellipse at 94% 94%, rgba(13,148,136,0.26) 0%, transparent 50%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: rgba(232,168,56,0.2); border: 1px solid var(--gold);
+    color: var(--gold-light); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead { font-size: 1.12rem; color: rgba(250,249,246,0.78); max-width: 660px; margin-bottom: 32px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--paper); padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: var(--ink); border-top: 1px solid rgba(255,255,255,0.1); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; }
+  .toc a { color: rgba(250,249,246,0.65); text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    padding: 14px 15px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  .module-header { margin: 56px 0 28px; padding: 30px 34px; border-radius: 16px; position: relative; overflow: hidden; }
+  .module-header.teal { background: var(--teal); }
+  .module-header.violet { background: var(--violet); }
+  .module-header.gold { background: #92400e; }
+  .module-header.sky { background: #075985; }
+  .module-header.rose { background: #9f1239; }
+  .module-header.ink { background: var(--ink); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', serif; font-size: 5rem;
+    font-weight: 900; color: rgba(255,255,255,0.12); line-height: 1; }
+  .module-header .mod-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .module-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+    color: #fff; line-height: 1.2; }
+  .module-header p { color: rgba(255,255,255,0.82); margin-top: 8px; font-size: 0.97rem; max-width: 620px; }
+
+  h3 { font-family: 'Playfair Display', serif; font-size: 1.32rem; font-weight: 700; margin: 38px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    box-shadow: var(--card-shadow); transition: box-shadow 0.25s, transform 0.25s; }
+  .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-3px); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 14px; box-shadow: var(--card-shadow); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--ink); color: var(--paper); }
+  thead th { padding: 13px 15px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 12px 15px; font-size: 0.88rem; vertical-align: top; }
+  tbody tr:hover { background: var(--cream); }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+  td.ok { color: #166534; font-weight: 600; }
+  td.bad { color: #9f1239; font-weight: 600; }
+  td.warn { color: #854d0e; font-weight: 600; }
+
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip { background: var(--teal-light); border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3; border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light); border-left: 4px solid var(--sky); }
+  .callout.try { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light); border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body strong { display: block; margin-bottom: 4px; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: var(--gold-light); border: 1px solid #d9a441; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 24px 28px; margin: 28px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.05rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .mono { background: rgba(255,255,255,0.55); padding: 2px 7px; border-radius: 5px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace;
+    font-size: 1.35rem; margin: 14px 0; color: #78350f; }
+
+  .code-block { background: #1e1e2e; border-radius: 12px; overflow: hidden; margin: 18px 0; box-shadow: var(--card-shadow); }
+  .code-header { background: #2a2a3d; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+  .code-header span { color: rgba(255,255,255,0.55); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal); color: #fff; font-size: 0.7rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .code-lang.gold { background: #b45309; }
+  .code-lang.bad { background: var(--rose); }
+  pre { padding: 20px 22px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; line-height: 1.65; color: #cdd6f4; }
+  .kw { color: #cba6f7; } .str { color: #a6e3a1; } .cm { color: #6c7086; font-style: italic; }
+  .fn { color: #89b4fa; } .num { color: #fab387; } .var { color: #f38ba8; } .out { color: #f9e2af; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    margin: 24px 0; box-shadow: var(--card-shadow); overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  .step-list { list-style: none; margin: 16px 0; }
+  .step-list li { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; flex-shrink: 0; }
+  .step-text strong { display: block; margin-bottom: 3px; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 2px 6px; border-radius: 5px; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px 26px;
+    margin: 18px 0; box-shadow: var(--card-shadow); }
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 14px; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 1800px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .rbtn { background: var(--ink); color: var(--paper); border: none; border-radius: 100px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s; }
+  .rbtn:hover { background: var(--teal); }
+
+  footer { background: var(--ink); color: rgba(250,249,246,0.55); text-align: center;
+    padding: 32px 20px; font-size: 0.85rem; margin-top: 60px; }
+  footer strong { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 48px 20px 40px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ════ light format (applied Sept 2026): overrides the dark theme above ════ */
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 9 · Tuesday 06 October 2026</div>
+    <h1>Gradient descent,<br><em>with a pencil</em></h1>
+    <p class="lead">You have a function and you want its lowest point. You cannot see the whole surface — only the ground under your feet. Today you learn the entire method for finding the bottom anyway, and you run it five times by hand before you write a line of code.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 1 · Foundations</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 6 · descend and plot</span>
+      <span class="tag">Last session before we build</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#slope">Slope</a>
+  <a href="#rule">The rule</a>
+  <a href="#byhand">Five steps by hand</a>
+  <a href="#code">In three lines</a>
+  <a href="#eta">The learning rate</a>
+  <a href="#chain">The chain rule</a>
+  <a href="#honest">Two omissions</a>
+  <a href="#lab">Lab 6</a>
+  <a href="#next">Before Friday</a>
+</div></nav>
+
+<div class="page">
+<!-- ══════════════════════════ SLOPE ══════════════════════════ -->
+<div class="module-header ink" data-num="1" id="slope">
+  <div class="mod-label">Part 1 · 10 minutes</div>
+  <h2>Slope: which way is down, and how steeply</h2>
+  <p>This is all the calculus this course needs, and you may already have it.</p>
+</div>
+
+<p>In Lab 1 you plotted <em>f(x) = x²</em>. Look at it again. At any point on that curve there is a slope — how fast the curve rises as you move right. The slope is written <em>f′(x)</em>, and for this function it is:</p>
+
+<div class="bigidea">
+  <div class="bi-label">The one derivative you must know today</div>
+  <p class="eq">f(x) = x²&nbsp;&nbsp;&nbsp;⟹&nbsp;&nbsp;&nbsp;f′(x) = 2x</p>
+  <p>At <em>x</em> = 2 the slope is 4: steep, going up to the right. At <em>x</em> = −2 the slope is −4: steep, going <em>down</em> to the right. At <em>x</em> = 0 the slope is 0, and that is the bottom.</p>
+</div>
+
+<div class="diagram-wrap">
+<div class="diagram-title">The sign of the slope points away from the minimum — always</div>
+<svg viewBox="0 0 760 290" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  <line x1="60" y1="240" x2="700" y2="240" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="380" y1="30" x2="380" y2="256" stroke="#94a3b8" stroke-width="1.5"/>
+  <path d="M120 40 Q 380 400 640 40" fill="none" stroke="#0f0e17" stroke-width="2.5"/>
+  <!-- left point -->
+  <circle cx="220" cy="130" r="7" fill="#e11d48"/>
+  <line x1="160" y1="196" x2="280" y2="64" stroke="#e11d48" stroke-width="2.2" stroke-dasharray="5,4"/>
+  <text x="150" y="120" font-family="JetBrains Mono" font-size="13" fill="#9f1239">x = -2</text>
+  <text x="128" y="140" font-family="JetBrains Mono" font-size="13" fill="#9f1239">f'(x) = -4</text>
+  <path d="M220 168 H 300" stroke="#e11d48" stroke-width="2.5" marker-end="url(#ar)"/>
+  <text x="240" y="192" font-family="DM Sans" font-size="12" fill="#9f1239">step right</text>
+  <!-- right point -->
+  <circle cx="540" cy="130" r="7" fill="#0d9488"/>
+  <line x1="480" y1="64" x2="600" y2="196" stroke="#0d9488" stroke-width="2.2" stroke-dasharray="5,4"/>
+  <text x="586" y="120" font-family="JetBrains Mono" font-size="13" fill="#115e59">x = 2</text>
+  <text x="576" y="140" font-family="JetBrains Mono" font-size="13" fill="#115e59">f'(x) = +4</text>
+  <path d="M540 168 H 460" stroke="#0d9488" stroke-width="2.5" marker-end="url(#at)"/>
+  <text x="452" y="192" font-family="DM Sans" font-size="12" fill="#115e59">step left</text>
+  <!-- bottom -->
+  <circle cx="380" cy="243" r="7" fill="#e8a838" stroke="#b45309" stroke-width="2"/>
+  <text x="380" y="278" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#78350f">f'(0) = 0 — the bottom</text>
+  <text x="640" y="262" font-family="JetBrains Mono" font-size="13" fill="#475569">x</text>
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#e11d48"/></marker>
+    <marker id="at" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#0d9488"/></marker>
+  </defs>
+</svg>
+</div>
+
+<p>Notice the pattern, because the whole method rests on it. Where the slope is <strong>positive</strong>, the minimum is to the <strong>left</strong>. Where the slope is <strong>negative</strong>, the minimum is to the <strong>right</strong>. In both cases, you should move in the direction <em>opposite</em> to the sign of the slope.</p>
+
+<!-- ══════════════════════════ RULE ══════════════════════════ -->
+<div class="module-header violet" data-num="2" id="rule">
+  <div class="mod-label">Part 2 · 6 minutes</div>
+  <h2>The rule, in one line</h2>
+  <p>Every model in this course, and every frontier model in the world, is trained by repeating this.</p>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">Gradient descent</div>
+  <p class="eq">x ← x − η · f′(x)</p>
+  <p>Take the slope. Move against it. The Greek letter η (eta) is the <strong>learning rate</strong> — how big a step to take. It is a number you choose, and Part 5 is about how much that choice matters.</p>
+</div>
+
+<p>The minus sign is the whole idea: it makes the step oppose the slope, so you always move downhill. And the size of the step is proportional to the slope, which gives you something valuable for free — <strong>the steps get smaller as you approach the bottom</strong>, because the slope gets smaller. You do not have to slow down manually. The method slows itself down.</p>
+
+<div class="callout info">
+  <div class="callout-icon">🌫️</div>
+  <div class="callout-body">
+    <strong>Why not just solve f′(x) = 0?</strong>
+    <p>For <em>x</em>² you could, and in session 10 you will do exactly that for a straight-line fit. But for a network with nine weights — let alone nine billion — there is no formula to solve. Gradient descent needs only the slope where you currently stand. It is the method that survives when the analytic answer does not exist, which is why it is the one that scaled.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ BY HAND ══════════════════════════ -->
+<div class="module-header gold" data-num="3" id="byhand">
+  <div class="mod-label">Part 3 · 15 minutes · pencils out, laptops closed</div>
+  <h2>Five steps, by hand</h2>
+  <p>Start at <em>x</em> = 2. Learning rate η = 0.1. Nobody types anything for the next fifteen minutes.</p>
+</div>
+
+<p>Substitute <em>f′(x) = 2x</em> into the rule and something convenient happens:</p>
+
+<div class="code-block">
+  <div class="code-header"><span>the update simplifies</span><span class="code-lang gold">arithmetic</span></div>
+<pre>x ← x - η·<span class="fn">f'</span>(x)
+  = x - <span class="num">0.1</span> × <span class="num">2</span>x
+  = x - <span class="num">0.2</span>x
+  = <span class="num">0.8</span>x            <span class="cm">← every step just multiplies x by 0.8</span></pre>
+</div>
+
+<p>So you can do this in your head. Fill the table in before looking at mine.</p>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th class="mono">Step</th><th class="mono">x</th><th class="mono">f(x) = x²</th><th class="mono">f′(x) = 2x</th><th class="mono">next x = x − 0.1·f′(x)</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">0</td><td class="mono">2.0000</td><td class="mono">4.0000</td><td class="mono">4.000</td><td class="mono">2.0 − 0.4 = 1.6</td></tr>
+    <tr><td class="mono">1</td><td class="mono">1.6000</td><td class="mono">2.5600</td><td class="mono">3.200</td><td class="mono">1.6 − 0.32 = 1.28</td></tr>
+    <tr><td class="mono">2</td><td class="mono">1.2800</td><td class="mono">1.6384</td><td class="mono">2.560</td><td class="mono">1.28 − 0.256 = 1.024</td></tr>
+    <tr><td class="mono">3</td><td class="mono">1.0240</td><td class="mono">1.0486</td><td class="mono">2.048</td><td class="mono">1.024 − 0.2048 = 0.8192</td></tr>
+    <tr><td class="mono">4</td><td class="mono">0.8192</td><td class="mono">0.6711</td><td class="mono">1.638</td><td class="mono">0.8192 − 0.1638 = 0.6554</td></tr>
+    <tr><td class="mono">5</td><td class="mono ok">0.6554</td><td class="mono ok">0.4295</td><td class="mono">1.311</td><td class="mono">…and so on</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout tip">
+  <div class="callout-icon">👀</div>
+  <div class="callout-body">
+    <strong>Three things to notice in your own table</strong>
+    <p><strong>f(x) falls every single step</strong> — 4.0, 2.56, 1.64, 1.05, 0.67, 0.43. That column is what a loss curve is.</p>
+    <p><strong>The steps shrink</strong> — 0.4, then 0.32, then 0.256. Nobody told it to slow down; the slope did that.</p>
+    <p><strong>It never quite arrives.</strong> After five steps <em>x</em> = 0.655, not 0. It approaches 0 and never reaches it. Training does not finish; you stop it. Session 16 is about deciding when.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ CODE ══════════════════════════ -->
+<div class="module-header teal" data-num="4" id="code">
+  <div class="mod-label">Part 4 · 8 minutes</div>
+  <h2>The same thing, in three lines</h2>
+  <p>Now open the laptop, and check the machine against your paper.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>the entire algorithm</span><span class="code-lang">python</span></div>
+<pre><span class="kw">def</span> <span class="fn">grad</span>(x):
+    <span class="kw">return</span> <span class="num">2</span> * x            <span class="cm"># f'(x) for f(x) = x²</span>
+
+x, eta = <span class="num">2.0</span>, <span class="num">0.1</span>
+<span class="kw">for</span> step <span class="kw">in</span> <span class="fn">range</span>(<span class="num">6</span>):
+    <span class="fn">print</span>(<span class="str">f"step {step}:  x = {x:.4f}   f(x) = {x*x:.4f}"</span>)
+    x = x - eta * <span class="fn">grad</span>(x)          <span class="cm">← the one line that matters</span></pre>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>output — compare against your paper, digit by digit</span><span class="code-lang">output</span></div>
+<pre><span class="out">step 0:  x = 2.0000   f(x) = 4.0000
+step 1:  x = 1.6000   f(x) = 2.5600
+step 2:  x = 1.2800   f(x) = 1.6384
+step 3:  x = 1.0240   f(x) = 1.0486
+step 4:  x = 0.8192   f(x) = 0.6711
+step 5:  x = 0.6554   f(x) = 0.4295</span></pre>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">You have now written a training loop</div>
+  <p>That is not a simplified version of one. In session 16 you will train a real network, and the loop will have the same three parts: compute the gradient, multiply by the learning rate, subtract. What changes is that <em>x</em> becomes thirteen numbers, then sixty thousand, then a hundred billion — and that computing the gradient stops being one line and becomes session 14.</p>
+  <p>The method does not change. It is this.</p>
+</div>
+
+<!-- ══════════════════════════ ETA ══════════════════════════ -->
+<div class="module-header rose" data-num="5" id="eta">
+  <div class="mod-label">Part 5 · 16 minutes · the heart of the session</div>
+  <h2>The learning rate decides everything</h2>
+  <p>And for this function, exactly one number tells you what will happen. You can compute it in your head.</p>
+</div>
+
+<p>Keep the rule general and see what one step does:</p>
+
+<div class="code-block">
+  <div class="code-header"><span>substitute f′(x) = 2x, but leave η as a symbol</span><span class="code-lang gold">arithmetic</span></div>
+<pre>x ← x - η·<span class="num">2</span>x  =  (<span class="num">1</span> - <span class="num">2</span>η)·x</pre>
+</div>
+
+<div class="bigidea">
+  <div class="bi-label">Every step multiplies x by the same factor</div>
+  <p class="eq">factor = 1 − 2η</p>
+  <p>So the behaviour depends only on <strong>|1 − 2η|</strong>. Below 1, <em>x</em> shrinks toward zero. Above 1, it grows. Equal to 1, it does neither, forever. Negative, it flips sides each step.</p>
+  <p>You will not get a formula this clean again in this course. Use it now to build intuition you will keep.</p>
+</div>
+
+<div class="tool-table-wrap">
+<table>
+  <thead><tr><th class="mono">η</th><th class="mono">1 − 2η</th><th class="mono">|factor|</th><th>What happens</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">0.01</td><td class="mono">+0.98</td><td class="mono">0.98</td><td class="warn">Converges — but agonisingly. See the trajectory below.</td></tr>
+    <tr><td class="mono">0.1</td><td class="mono">+0.80</td><td class="mono">0.80</td><td class="ok">Smooth and steady. The one you did by hand.</td></tr>
+    <tr><td class="mono">0.5</td><td class="mono">0.00</td><td class="mono">0.00</td><td class="ok">Lands exactly on the minimum in <strong>one step</strong>.</td></tr>
+    <tr><td class="mono">0.9</td><td class="mono">−0.80</td><td class="mono">0.80</td><td class="warn">Converges at the same rate as 0.1 — but overshoots and oscillates.</td></tr>
+    <tr><td class="mono">1.0</td><td class="mono">−1.00</td><td class="mono">1.00</td><td class="bad">Bounces between +2 and −2 forever. Never improves, never explodes.</td></tr>
+    <tr><td class="mono">1.1</td><td class="mono">−1.20</td><td class="mono">1.20</td><td class="bad">Diverges. Each step is further out than the last.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>The trajectories, eight steps from <em>x</em> = 2</h4>
+
+<div class="code-block">
+  <div class="code-header"><span>run these yourself — the last row is the one to stare at</span><span class="code-lang">output</span></div>
+<pre>η=<span class="num">0.01</span>    <span class="num">2.000</span>   <span class="num">1.960</span>   <span class="num">1.921</span>   <span class="num">1.882</span>   <span class="num">1.845</span>   <span class="num">1.808</span>   <span class="num">1.772</span>   <span class="num">1.736</span>   <span class="num">1.702</span>
+η=<span class="num">0.1</span>     <span class="num">2.000</span>   <span class="num">1.600</span>   <span class="num">1.280</span>   <span class="num">1.024</span>   <span class="num">0.819</span>   <span class="num">0.655</span>   <span class="num">0.524</span>   <span class="num">0.419</span>   <span class="num">0.336</span>
+η=<span class="num">0.5</span>     <span class="num">2.000</span>   <span class="num">0.000</span>   <span class="num">0.000</span>   <span class="num">0.000</span>   <span class="num">0.000</span>   <span class="num">0.000</span>   <span class="num">0.000</span>   <span class="num">0.000</span>   <span class="num">0.000</span>
+η=<span class="num">0.9</span>     <span class="num">2.000</span>  <span class="num">-1.600</span>   <span class="num">1.280</span>  <span class="num">-1.024</span>   <span class="num">0.819</span>  <span class="num">-0.655</span>   <span class="num">0.524</span>  <span class="num">-0.419</span>   <span class="num">0.336</span>
+η=<span class="num">1.0</span>     <span class="num">2.000</span>  <span class="num">-2.000</span>   <span class="num">2.000</span>  <span class="num">-2.000</span>   <span class="num">2.000</span>  <span class="num">-2.000</span>   <span class="num">2.000</span>  <span class="num">-2.000</span>   <span class="num">2.000</span>
+η=<span class="num">1.1</span>     <span class="num">2.000</span>  <span class="num">-2.400</span>   <span class="num">2.880</span>  <span class="num">-3.456</span>   <span class="num">4.147</span>  <span class="num">-4.977</span>   <span class="num">5.972</span>  <span class="num">-7.166</span>   <span class="num">8.600</span></pre>
+</div>
+
+<div class="quiz">
+  <h5>Three questions about that table</h5>
+  <p class="q-sub">Answer all three before opening. The second one catches almost everyone.</p>
+  <button class="rbtn" onclick="tog('r1')">Show the answers</button>
+  <div class="reveal" id="r1">
+    <p><strong>Q1. Why is η = 0.5 exact?</strong> Because 1 − 2(0.5) = 0, so <em>x</em> is multiplied by zero. The step happens to be precisely the distance to the minimum. This is a coincidence of <em>this</em> function — do not expect it again, and never go looking for the "perfect" learning rate on a real problem.</p>
+    <p><strong>Q2. η = 0.1 and η = 0.9 reach 0.336 after the same number of steps. Are they equally good?</strong> The magnitudes match exactly — both factors have size 0.80 — so on this function they converge at an identical rate. But 0.9 is <em>far</em> more dangerous. It sits close to the cliff at η = 1.0; a slightly steeper function, or one more layer, and it diverges. 0.1 has room. In practice you choose the stable side of equally-fast options, because you are never as certain about the curvature as you are here.</p>
+    <p><strong>Q3. What is actually wrong with η = 0.01?</strong> Nothing, except time. It converges — 0.98 is below 1 — but after eight steps it has moved from 2.000 to 1.702. It would need roughly 340 steps to reach where η = 0.1 gets in 8. Multiply that by a network that takes a minute per pass and you have wasted a week to avoid a risk that was not there.</p>
+  </div>
+</div>
+
+<div class="callout stop">
+  <div class="callout-icon">💥</div>
+  <div class="callout-body">
+    <strong>What divergence looks like when it happens to you</strong>
+    <p>Look at the η = 1.1 row: 2.4, 2.88, 3.46, 4.15, 4.98… growing by 20% each step. In session 16 this will appear on your screen as a loss that climbs instead of falling, and then prints <code>nan</code>. When you see <code>nan</code>, your first move is to divide the learning rate by ten. Not to redesign the network. Not to get more data. Divide by ten and run it again.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ CHAIN ══════════════════════════ -->
+<div class="module-header sky" data-num="6" id="chain">
+  <div class="mod-label">Part 6 · 8 minutes</div>
+  <h2>The chain rule — the second and last piece of calculus</h2>
+  <p>You need it because a network is functions inside functions, and session 14 is nothing but this rule applied carefully.</p>
+</div>
+
+<p>Suppose a quantity depends on <em>u</em>, and <em>u</em> depends on <em>x</em>. How fast does the quantity change as <em>x</em> changes? You multiply the two rates.</p>
+
+<div class="bigidea">
+  <div class="bi-label">The chain rule</div>
+  <p class="eq">dy/dx = (dy/du) × (du/dx)</p>
+  <p>If <em>u</em> changes 3 times as fast as <em>x</em>, and <em>y</em> changes 5 times as fast as <em>u</em>, then <em>y</em> changes 15 times as fast as <em>x</em>. That is the entire content of the rule.</p>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>worked, on a function you will meet again in session 11</span><span class="code-lang gold">arithmetic</span></div>
+<pre><span class="fn">f</span>(x) = (x - <span class="num">3</span>)²
+
+<span class="cm"># name the inside</span>
+u = x - <span class="num">3</span>            du/dx = <span class="num">1</span>
+f = u²               df/du = <span class="num">2</span>u
+
+<span class="cm"># multiply the rates</span>
+df/dx = <span class="num">2</span>u × <span class="num">1</span> = <span class="num">2</span>(x - <span class="num">3</span>)
+
+<span class="cm"># check at x = 0:   2(0-3) = -6   → slope is negative, minimum is to the right ✓</span>
+<span class="cm"># check at x = 5:   2(5-3) = +4   → slope is positive, minimum is to the left  ✓</span></pre>
+</div>
+
+<div class="callout tip">
+  <div class="callout-icon">🔬</div>
+  <div class="callout-body">
+    <strong>You can always check a derivative without trusting your algebra</strong>
+    <p>Nudge <em>x</em> by a tiny amount and measure how much <em>f</em> moved:</p>
+    <p class="mono" style="background:#fff;padding:10px;border-radius:8px;margin-top:8px">h = 1e-6<br>numerical = (f(x + h) - f(x - h)) / (2 * h)</p>
+    <p>For <em>f(x) = (x−3)²</em> at <em>x</em> = 0 this gives −6.0000, matching the algebra to four decimals. This is called a <strong>numerical gradient check</strong>, and in session 14 it is how you will prove your hand-derived backpropagation is correct before you trust it. Remember that it exists.</p>
+  </div>
+</div>
+
+<h4>Why a network needs it</h4>
+
+<p>Your 2–3–1 network from Tuesday is a chain: the input produces hidden values, the hidden values produce an output, the output produces a loss. To know how much a weight in <code>W1</code> affects the loss, you must multiply the rates along that chain. That is what backpropagation is — the chain rule, applied layer by layer, backwards. You now have the tool. Session 14 does the work.</p>
+
+<!-- ══════════════════════════ HONEST ══════════════════════════ -->
+<h3 id="honest">Two things I have not told you the truth about yet</h3>
+
+<div class="card-grid">
+  <div class="card"><div class="card-icon">🕳️</div><h4>Real surfaces are not bowls</h4><p><em>x</em>² has one minimum and you always find it. A real loss surface has many valleys, and gradient descent finds whichever one it happens to roll into. In practice this matters far less than it sounds — but it is why two identical training runs can end at different answers, and why session 16 asks you to fix a random seed.</p></div>
+  <div class="card"><div class="card-icon">🧭</div><h4>Real problems have many dimensions</h4><p>You descended one number. A network has thousands, and the slope becomes a <em>gradient</em> — one slope per parameter, all computed at once. The update rule is unchanged; it just applies to every entry of <code>W</code> simultaneously. NumPy does that in one line, which is the reason we spent two sessions on arrays.</p></div>
+</div>
+
+<!-- ══════════════════════════ LAB ══════════════════════════ -->
+<div class="module-header teal" data-num="7" id="lab">
+  <div class="mod-label">Lab 6 · 16 minutes in class</div>
+  <h2>Descend, and plot the path</h2>
+</div>
+
+<p>Lab 6 is a separate handout — <code>CSC4315_Lab06_Descend_And_Plot.html</code>. You turn the five steps you just did on paper into a function, draw the walk down the curve, and then find the cliff edge of the learning rate for yourself rather than taking my word for where it is.</p>
+
+<div class="callout tip">
+  <div class="callout-icon">✅</div>
+  <div class="callout-body">
+    <strong>Same rules, and one addition</strong>
+    <p>Finish in the room, hand up after three minutes. The addition: <strong>keep your <code>numgrad</code> function</strong>. You will paste it into session 14 to check work you have not done yet, and it is the only piece of code from unit 1 that comes with you.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ NEXT ══════════════════════════ -->
+<h3 id="next">Before Friday — and a note on where you are</h3>
+
+<p>Unit 1 ends here. In six sessions you have gone from "what is a Python list" to a working optimisation algorithm. You can compute a layer, batch it, and walk downhill on a function. Everything needed to train something real is in your hands except one question, which is Friday's: <strong>downhill on what?</strong></p>
+
+<ol>
+  <li><strong>Finish Lab 6</strong>, all six parts.</li>
+  <li><strong>Be able to state, without notes:</strong> the update rule, what η does, what happens when it is too large, and what your first action is when you see <code>nan</code>.</li>
+  <li><strong>Keep <code>numgrad</code>.</strong> Session 14 needs it.</li>
+</ol>
+
+<div class="callout tip">
+  <div class="callout-icon">➡️</div>
+  <div class="callout-body">
+    <strong>Session 10 — Friday 09 October, 11:30</strong>
+    <p>Unit 2 begins. <em>The learning problem, and a line learned by descent.</em> Features, labels, training and test sets, and loss — the function we are actually going to descend. We fit a straight line to six points exactly, by solving it, so that you have seen a fitted model before you meet an iterative one — and then we throw the exact solution away and reach the same line by descending to it, using precisely what you did by hand today. No libraries from here until session 17.</p>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 9 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 26 — Using a language model you did not train</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 26 · Friday 04 December 2026</div>
+    <h1>Using a language model<br><em>you did not train</em></h1>
+    <p class="lead">A small pretrained transformer runs on a laptop CPU. It does one thing: given some tokens, it produces a probability for every possible next token. Today you learn how that single ability becomes generated text, why the same prompt gives different answers, and how thirty sentences of fine-tuning change its voice.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 5 · Language</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 17 · generate, then fine-tune</span>
+      <span class="tag">distilgpt2 · 82 million parameters</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#next">Next token</a>
+  <a href="#temp">Temperature</a>
+  <a href="#ft">Fine-tuning</a>
+  <a href="#limits">Its limits</a>
+  <a href="#lab">Lab 17</a>
+  <a href="#next">Before Tuesday</a>
+</div></nav>
+
+<div class="page">
+
+<div class="module-header ink" data-num="1" id="next">
+  <div class="mod-label">Part 1 · 15 minutes</div>
+  <h2>One ability: the next token</h2>
+</div>
+<p>A causal language model reads a sequence of tokens and outputs, for the next position, a score — a <strong>logit</strong> — for each of the 50,257 tokens in its vocabulary. A softmax turns the scores into probabilities. That is all it computes. Everything else is what we do with those probabilities.</p>
+<div class="bigidea"><div class="bi-label">Generation is a loop</div><p>Predict a distribution for the next token. <strong>Choose</strong> one. Append it to the input. Repeat. A paragraph is dozens of these choices in a row, each conditioned on every earlier choice — which is why one odd early choice can send the whole text somewhere strange.</p></div>
+<p>It is trained the same way: on ordinary text, at every position, the loss is the cross-entropy between the predicted distribution and the token that actually came next. Session 11's loss, with 50,257 classes instead of 2, applied billions of times. No labels are needed beyond the text itself.</p>
+
+<div class="module-header teal" data-num="2" id="temp">
+  <div class="mod-label">Part 2 · 20 minutes</div>
+  <h2>Sampling and temperature</h2>
+  <p>Why the same prompt gives different text each time.</p>
+</div>
+<p>Always picking the most probable token is <strong>greedy decoding</strong>; it tends to repeat itself. Instead we <em>sample</em> from the distribution. <strong>Temperature</strong> <em>T</em> divides the logits before the softmax, sharpening or flattening the distribution. Three candidate tokens with logits 2.0, 1.0 and 0.1:</p>
+<div class="tool-table-wrap"><table><thead><tr><th>Temperature</th><th class="num">Token A</th><th class="num">Token B</th><th class="num">Token C</th><th>Effect</th></tr></thead><tbody><tr><td>0.5</td><td class="num">0.864</td><td class="num">0.117</td><td class="num">0.019</td><td>sharper: almost always A — safe, repetitive</td></tr><tr><td>1.0</td><td class="num">0.659</td><td class="num">0.242</td><td class="num">0.099</td><td>the model's own distribution</td></tr><tr><td>2.0</td><td class="num">0.502</td><td class="num">0.304</td><td class="num">0.194</td><td>flatter: surprising, often incoherent</td></tr></tbody></table></div>
+<div class="bigidea"><div class="bi-label">Temperature changes how it samples, not what it knows</div><p>Every probability in that table comes from the same logits. Turning temperature down does not make the model more correct — only more predictable. A false statement the model rates as likely is produced <em>more</em> reliably at low temperature, not less. Top-k and top-p sampling are further ways of trimming the unlikely tail before choosing.</p></div>
+<div class="callout info"><div class="callout-icon">🎲</div><div class="callout-body"><strong>Seeds make it reproducible</strong><p>Sampling uses a random generator. Fix the seed, the prompt and the temperature, and the text is the same every run. That is how Lab 17 makes a before-and-after comparison fair.</p></div></div>
+
+<div class="module-header violet" data-num="3" id="ft">
+  <div class="mod-label">Part 3 · 25 minutes</div>
+  <h2>Fine-tuning: transfer learning, one modality across</h2>
+  <p>The same move as session 23, on text.</p>
+</div>
+<p>distilgpt2 has 82 million parameters, pretrained on a large web-text corpus. Lab 17 continues training <em>all</em> of them, briefly, on a thirty-sentence corpus in which every sentence begins <em>"In CSC 4315,"</em> — predict first, the split happens before scaling, a loss of 0.693 means nothing learned. Four epochs, a small learning rate, the same next-token loss.</p>
+<div class="code-block"><div class="code-header"><span>the fine-tuning loop in Lab 17</span><span class="code-lang">python</span></div>
+<pre><span class="kw">for</span> epoch in <span class="fn">range</span>(<span class="num">4</span>):
+    <span class="kw">for</span> (batch,) in loader:
+        out = <span class="fn">model</span>(input_ids=batch, labels=batch)   <span class="cm"># next-token cross-entropy, computed inside</span>
+        out.loss.<span class="fn">backward</span>()                          <span class="cm"># session 14, via autograd</span>
+        opt.<span class="fn">step</span>(); opt.<span class="fn">zero_grad</span>()                  <span class="cm"># session 18</span></pre>
+</div>
+<p>Then generate from the same probe — same prompt, seed and temperature — before and after. The difference is the parameters, and only the parameters. After fine-tuning the text borrows the corpus's phrasing and topics: the voice has changed.</p>
+<div class="bigidea"><div class="bi-label">What fine-tuning shows, and what it does not</div><p>It shows that a small, targeted dataset can shift a large model's behaviour cheaply. It does not show understanding: the model has learned which tokens follow which in thirty sentences. Fine-tune for too long and it recites the corpus word for word — <strong>session 22's overfitting</strong>, now audible.</p></div>
+<div class="callout warn"><div class="callout-icon">🧾</div><div class="callout-body"><strong>The same responsibilities as unit 4</strong><p>A fine-tuning corpus is training data. It needs a held-out set to detect memorising, it carries the biases of whoever wrote it, and anything private in it can come back out in generated text.</p></div></div>
+
+<div class="module-header sky" data-num="4" id="limits">
+  <div class="mod-label">Part 4 · 5 minutes</div>
+  <h2>Why this model writes nonsense</h2>
+</div>
+<p>Lab 17's model will produce fluent, confident, frequently absurd text. It has 82 million parameters, was trained on a fraction of the text frontier models see, and was never taught to follow instructions. Tuesday explains precisely which of those differences turns this into a system that can help write your code.</p>
+
+<div class="module-header teal" data-num="5" id="lab">
+  <div class="mod-label">Lab 17 · 25 minutes in class</div>
+  <h2>Generate, then fine-tune</h2>
+</div>
+<p>Lab 17 — <code>CSC4315_Lab17_Generate_Then_Fine_Tune</code>. A temperature table from three settings and two seeds, the provided fine-tuning run, and a controlled before-and-after comparison. The model, corpus and script are provided.</p>
+
+<h3 id="next">Before Tuesday</h3>
+<ol><li><strong>Finish Lab 17.</strong> Unit 5 ends here.</li><li><strong>Bring one frontier model</strong> open in a browser tab on Tuesday, and one task from your own studies you would like it to do well.</li></ol>
+<div class="callout tip"><div class="callout-icon">➡️</div><div class="callout-body"><strong>Session 27 — Tuesday 08 December, 16:00</strong><p>From small models to frontier models, and prompting as engineering.</p></div></div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 26 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>

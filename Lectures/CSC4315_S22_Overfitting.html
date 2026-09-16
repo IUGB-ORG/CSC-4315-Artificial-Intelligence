@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>CSC 4315 · Session 22 — Overfitting and what to do about it</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e17; --paper: #fdfcfa; --cream: #f2f0eb;
+    --gold: #e8a838; --gold-light: #fef3c7;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --violet: #7c3aed; --violet-light: #ede9fe;
+    --rose: #e11d48; --rose-light: #ffe4e6;
+    --sky: #0284c7; --sky-light: #e0f2fe;
+    --slate: #475569; --border: #e2e0da;
+    --card-shadow: 0 2px 14px rgba(15,14,23,0.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); line-height: 1.7; }
+
+  /* ── hero (light) ── */
+  .hero { background: linear-gradient(135deg, #eef2fb 0%, #e7efee 48%, #f4f0e1 100%); color: var(--ink);
+    padding: 64px 40px 48px; position: relative; overflow: hidden; border-bottom: 3px solid var(--gold); }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 78% 22%, rgba(13,148,136,0.08) 0%, transparent 58%),
+                radial-gradient(ellipse at 12% 86%, rgba(2,132,199,0.07) 0%, transparent 55%); }
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge { display: inline-block; background: #fffdf6; border: 1.5px solid var(--gold);
+    color: #92400e; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 6px 16px; border-radius: 100px; margin-bottom: 22px; }
+  .hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.3rem);
+    font-weight: 900; line-height: 1.12; margin-bottom: 18px; color: var(--ink); }
+  .hero h1 em { font-style: normal; color: var(--violet); }
+  .hero p.lead { font-size: 1.1rem; color: var(--slate); max-width: 700px; margin-bottom: 28px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tag { background: #fff; border: 1px solid var(--border); color: var(--slate);
+    padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+
+  .toc { background: #fff; border-bottom: 1px solid var(--border); padding: 0 40px;
+    position: sticky; top: 0; z-index: 100; }
+  .toc-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; }
+  .toc a { color: var(--slate); text-decoration: none; font-size: 0.8rem; font-weight: 500;
+    padding: 12px 11px; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .toc a:hover { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 20px 40px 60px; }
+
+  /* ── module headers (pastel) ── */
+  .module-header { margin: 52px 0 26px; padding: 26px 32px; border-radius: 14px; position: relative;
+    overflow: hidden; border: 1px solid var(--border); }
+  .module-header.teal   { background: var(--teal-light);   border-color: #99e6d8; }
+  .module-header.violet { background: var(--violet-light); border-color: #d9cdfb; }
+  .module-header.gold   { background: var(--gold-light);   border-color: #f3d98b; }
+  .module-header.sky    { background: var(--sky-light);    border-color: #b9dff5; }
+  .module-header.rose   { background: var(--rose-light);   border-color: #fecdd3; }
+  .module-header.ink    { background: var(--cream);        border-color: var(--border); }
+  .module-header::after { content: attr(data-num); position: absolute; right: 24px; top: 50%;
+    transform: translateY(-50%); font-family: 'Playfair Display', Georgia, serif; font-size: 4.6rem;
+    font-weight: 900; color: rgba(15,14,23,0.07); line-height: 1; }
+  .module-header .mod-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 6px; color: var(--slate); }
+  .module-header.teal .mod-label   { color: #0f766e; }
+  .module-header.violet .mod-label { color: #6d28d9; }
+  .module-header.gold .mod-label   { color: #92400e; }
+  .module-header.sky .mod-label    { color: #075985; }
+  .module-header.rose .mod-label   { color: #9f1239; }
+  .module-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    color: var(--ink); line-height: 1.2; }
+  .module-header p { color: var(--slate); margin-top: 8px; font-size: 0.95rem; max-width: 640px; }
+
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.32rem; font-weight: 700; margin: 36px 0 14px; color: var(--ink); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: var(--slate);
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 18px; margin: 20px 0; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--card-shadow); }
+  .card-icon { font-size: 1.9rem; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .card p { font-size: 0.87rem; color: var(--slate); margin: 0; }
+
+  .tool-table-wrap { overflow-x: auto; margin: 22px 0; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: var(--cream); color: var(--ink); }
+  thead th { padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px 14px; font-size: 0.88rem; vertical-align: top; }
+  td.rowlab { font-weight: 600; color: var(--ink); background: var(--cream); }
+  td.mono, .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── callouts ── */
+  .callout { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; margin: 20px 0; }
+  .callout.tip  { background: var(--teal-light);   border-left: 4px solid var(--teal); }
+  .callout.warn { background: #fef9c3;             border-left: 4px solid #ca8a04; }
+  .callout.info { background: var(--sky-light);    border-left: 4px solid var(--sky); }
+  .callout.try  { background: var(--violet-light); border-left: 4px solid var(--violet); }
+  .callout.stop { background: var(--rose-light);   border-left: 4px solid var(--rose); }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-body { font-size: 0.92rem; }
+  .callout-body > strong { display: block; margin-bottom: 4px; }   /* title only — inline bold stays inline */
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  .bigidea { background: #fffbeb; border: 1px solid #f3d98b; border-left: 6px solid #b45309;
+    border-radius: 14px; padding: 22px 26px; margin: 26px 0; color: #3f2d0b; }
+  .bigidea .bi-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 10px; }
+  .bigidea p { font-size: 1.03rem; line-height: 1.65; margin: 0; color: #3f2d0b; }
+
+  /* ── code (light) ── */
+  .code-block { background: #f8f8fb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+  .code-header { background: #f0f0f5; border-bottom: 1px solid var(--border); padding: 8px 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .code-header span { color: var(--slate); font-size: 0.76rem; font-family: 'JetBrains Mono', monospace; }
+  .code-lang { background: var(--teal-light); color: #0f766e !important; font-size: 0.68rem !important; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+  .code-lang.shell { background: var(--cream); color: var(--slate) !important; }
+  .code-lang.bad { background: var(--rose-light); color: #9f1239 !important; }
+  pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; line-height: 1.6; color: #1e293b; white-space: pre; }
+  .kw { color: #7c3aed; } .str { color: #15803d; } .cm { color: #94a3b8; font-style: italic; }
+  .fn { color: #2563eb; } .num { color: #c2410c; } .var { color: #be123c; } .out { color: #92400e; }
+
+  .diagram-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+  .diagram-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--slate); margin-bottom: 18px; text-align: center; }
+
+  /* ── lettered step list (fixed: number and text on one row) ── */
+  .step-list { display: grid; grid-template-columns: 28px 1fr; column-gap: 14px; row-gap: 10px;
+    align-items: baseline; margin: 16px 0; list-style: none; }
+  .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 700;
+    transform: translateY(6px); }
+  .step-text { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .step-text:last-child { border-bottom: none; }
+  .step-text strong { font-weight: 700; }
+  .step-text p { font-size: 0.9rem; color: var(--slate); margin: 0; }
+
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 100px; font-size: 0.76rem; font-weight: 600; }
+  .pill.yes { background: #dcfce7; color: #166534; }
+  .pill.no { background: var(--rose-light); color: #9f1239; }
+  .pill.later { background: var(--sky-light); color: #075985; }
+
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: var(--cream);
+    padding: 1px 6px; border-radius: 5px; border: 1px solid #e7e4dc; }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .quiz { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 18px 0; }
+  .reveal { background: var(--cream); border-radius: 10px; padding: 0 18px; max-height: 0;
+    overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .reveal.open { max-height: 2400px; padding: 16px 18px; }
+  .reveal p { font-size: 0.9rem; margin-bottom: 8px; }
+  .reveal p:last-child { margin-bottom: 0; }
+  .reveal .code-block { background: #fff; }
+  .rbtn { background: var(--ink); color: #fff; border: none; border-radius: 100px; margin: 4px 0 10px;
+    padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .rbtn:hover { background: var(--teal); }
+
+  .write-line { border-bottom: 1.5px dashed #cbd5e1; min-height: 30px; margin: 6px 0 16px; }
+
+  footer { background: #fff; color: var(--slate); text-align: center; border-top: 2px solid var(--gold);
+    padding: 26px 20px; font-size: 0.82rem; margin-top: 56px; }
+  footer strong { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .page { padding: 16px 20px 40px; }
+    .hero { padding: 44px 20px 36px; }
+    .toc { padding: 0 8px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── print / PDF: same light design, answers shown, buttons hidden ── */
+  @page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+  @media print {
+    html { font-size: 14px; }
+    body { background: #fff; }
+    .hero { padding: 40px 34px 30px; border-radius: 0; }
+    .toc { position: static; }
+    .page { padding: 6px 4px 20px; }
+    .rbtn { display: none; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .reveal { max-height: none !important; padding: 14px 18px !important; overflow: visible; }
+    .code-block, .callout, .bigidea, .tool-table-wrap, .reveal, .step-text { break-inside: avoid; }
+    .module-header, h3 { break-after: avoid; break-inside: avoid; }
+    footer { margin-top: 30px; break-inside: avoid; }
+  }
+
+  /* ── lecture extras ── */
+  .quiz h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .quiz .q-sub { font-size: 0.88rem; color: var(--slate); margin-bottom: 12px; }
+  .bigidea p + p { margin-top: 12px; }
+  .bigidea .eq { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 1.12rem;
+    background: rgba(255,255,255,0.7); border-radius: 8px; padding: 10px 12px; margin: 8px 0 14px; }
+  .bigidea code { background: rgba(255,255,255,0.7); }
+  td.ok { color: #166534; font-weight: 600; } td.bad { color: #9f1239; font-weight: 600; } td.warn { color: #854d0e; font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin: 22px 0; }
+  .stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .big { font-family: 'Playfair Display', Georgia, serif; font-size: 2.1rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .stat .lbl { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate); margin-top: 6px; }
+  .module-header p { max-width: 680px; }
+  svg text { font-family: 'DM Sans', sans-serif; }
+  @media print { .quiz, .stat, .diagram-wrap, table { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CSC 4315 · Session 22 · Friday 20 November 2026</div>
+    <h1>Overfitting,<br><em>and what to do about it</em></h1>
+    <p class="lead">A model that memorises its training data can score perfectly and be useless. Today you watch it happen — training loss falling, validation loss climbing — and meet the five standard defences: less capacity, a weight penalty, dropout, stopping early, and the one that beats them all more often than you would expect.</p>
+    <div class="hero-tags">
+      <span class="tag">Unit 4 · Real data</span>
+      <span class="tag">80 minutes</span>
+      <span class="tag">Lab 15 · overfit, then fix it</span>
+      <span class="tag">Compressible: cross-validation to reading</span>
+    </div>
+  </div>
+</div>
+
+<nav class="toc"><div class="toc-inner">
+  <a href="#seen">Seeing it</a>
+  <a href="#capacity">Five defences</a>
+  <a href="#cv">Cross-validation</a>
+  <a href="#lab">Lab 15</a>
+  <a href="#next">Before Tuesday</a>
+</div></nav>
+
+<div class="page">
+
+<div class="module-header ink" data-num="1" id="seen">
+  <div class="mod-label">Part 1 · 15 minutes</div>
+  <h2>Training loss down, validation loss up</h2>
+  <p>Seen, not described.</p>
+</div>
+<p>Two interleaved half-moons, noisy, 80 points to train on and 80 held back. A network with two hidden layers of 128 neurons — about 17,000 parameters for 80 points — trained for 400 epochs.</p>
+<div class="diagram-wrap"><div class="diagram-title">Sketch of Lab 15's first run — the gap after the dashed line is the evidence</div>
+<svg viewBox="0 0 700 270" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto"><defs><marker id="ah" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#475569"/></marker></defs><line x1="60" y1="230" x2="660" y2="230" stroke="#94a3b8" stroke-width="1.5"/><line x1="60" y1="20" x2="60" y2="230" stroke="#94a3b8" stroke-width="1.5"/><polyline fill="none" stroke="#0284c7" stroke-width="3" points="60,71.30000000000001 120,149.5 180,172.5 240,188.6 300,202.4 360,211.6 420,218.5 480,221.95 540,225.4 600,227.24 660,228.16"/><polyline fill="none" stroke="#e11d48" stroke-width="3" points="60,71.30000000000001 120,161.0 180,188.6 240,197.8 300,193.2 360,174.8 420,149.5 480,119.60000000000001 540,87.4 600,55.19999999999999 660,27.599999999999994"/><line x1="240" y1="20" x2="240" y2="230" stroke="#475569" stroke-width="1.5" stroke-dasharray="5,4"/><text x="246" y="40" font-size="12" fill="#475569" text-anchor="start" font-weight="400" >best validation</text><text x="600" y="40" font-size="13" fill="#9f1239" text-anchor="middle" font-weight="700" >validation</text><text x="600" y="215" font-size="13" fill="#075985" text-anchor="middle" font-weight="700" >training</text><text x="360" y="260" font-size="13" fill="#475569" text-anchor="middle" font-weight="400" >epoch →</text><text x="30" y="125" font-size="13" fill="#475569" text-anchor="middle" font-weight="400" >loss</text></svg>
+</div>
+<div class="stat-row"><div class="stat"><div class="big">0.121</div><div class="lbl">best validation loss (epoch 38)</div></div><div class="stat"><div class="big">0.881</div><div class="lbl">validation loss after 400 epochs</div></div><div class="stat"><div class="big">96.3%</div><div class="lbl">accuracy at the best epoch</div></div><div class="stat"><div class="big">91.2%</div><div class="lbl">accuracy at the end</div></div></div>
+<div class="bigidea"><div class="bi-label">Overfitting, defined by its evidence</div><p>After the best epoch the network keeps improving on <em>these 80 points</em>, noise included, and gets worse on points it has not seen. <strong>Memorising is not learning.</strong> Training loss alone can never reveal it — only data the model was not fitted on can.</p></div>
+
+<h3>Three sets, three jobs</h3>
+<div class="tool-table-wrap"><table><thead><tr><th>Set</th><th>Used for</th><th>Touched</th></tr></thead><tbody><tr><td>Training</td><td>fitting the parameters</td><td>every step</td></tr><tr><td>Validation</td><td>choosing settings: epochs, penalty, size</td><td>as often as you like</td></tr><tr><td>Test</td><td>the one honest final number</td><td>once, at the end</td></tr></tbody></table></div>
+
+<div class="module-header teal" data-num="2" id="capacity">
+  <div class="mod-label">Part 2 · 25 minutes</div>
+  <h2>Five defences</h2>
+  <p>Each attacks the same gap from a different side.</p>
+</div>
+<div class="card-grid"><div class="card"><div class="card-icon">📏</div><h4>1 · Less capacity</h4><p>Fewer neurons or layers leave less room to memorise. One hidden layer of 4 neurons ends at a validation loss of 0.255.</p></div><div class="card"><div class="card-icon">⚖️</div><h4>2 · A weight penalty (L2)</h4><p>Add <em>α·Σw²</em> to the loss, so large weights must earn their size. α = 0.5 ends at 0.146.</p></div><div class="card"><div class="card-icon">🎲</div><h4>3 · Dropout</h4><p>During training, switch off a random share of neurons each step, so no neuron can rely on a particular partner. One layer in PyTorch: <code>nn.Dropout(0.35)</code>.</p></div><div class="card"><div class="card-icon">⏱️</div><h4>4 · Early stopping</h4><p>Keep the weights from the epoch with the best validation loss. Here: epoch 38, 96.3% instead of 91.2%.</p></div><div class="card"><div class="card-icon">📦</div><h4>5 · More data</h4><p>The same big network on 1,000 training points ends at a validation loss of 0.124 — no cleverness at all.</p></div></div>
+<div class="tool-table-wrap"><table><thead><tr><th>Defence</th><th class="num">Final validation loss</th><th class="num">Validation accuracy</th></tr></thead><tbody><tr><td>none</td><td class="num">0.881</td><td class="num">0.912</td></tr><tr><td>early stopping (epoch 38)</td><td class="num">0.121</td><td class="num">0.963</td></tr><tr><td>L2, α = 0.5</td><td class="num">0.146</td><td class="num">0.963</td></tr><tr><td>smaller network (4 units)</td><td class="num">0.255</td><td class="num">0.912</td></tr><tr><td>1,000 training points</td><td class="num">0.124</td><td class="num">0.950</td></tr></tbody></table></div>
+<div class="bigidea"><div class="bi-label">Why more data beats more cleverness</div><p>Every other defence restrains the model so it cannot fit the noise. More data dilutes the noise so there is less of it to fit. When collecting more examples is possible, it is usually the most reliable improvement available — which is also why session 23 borrows what a network learned from over a million images.</p></div>
+<div class="callout warn"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Tuning on validation creates a new, smaller leak</strong><p>Try enough settings against the same 80 validation points and you will find one that fits <em>them</em> by luck. That is why the test set stays untouched until the end — and why cross-validation exists.</p></div></div>
+
+<div class="module-header violet" data-num="3" id="cv">
+  <div class="mod-label">Part 3 · 15 minutes · compressible to reading</div>
+  <h2>Cross-validation</h2>
+  <p>When the data is too small to spare a validation set.</p>
+</div>
+<p>Split the training data into <em>k</em> folds. Train on <em>k − 1</em>, validate on the one left out, and rotate until every fold has been the validation set once. Report the mean and the spread. On session 20's Titanic pipeline, 5-fold cross-validation gives:</p>
+<div class="code-block"><div class="code-header"><span>cross_val_score(pipe, X, y, cv=5)</span><span class="code-lang">text</span></div>
+<pre>fold accuracies: 0.777  0.787  0.781  0.770  0.826
+mean 0.788   standard deviation 0.020</pre>
+</div>
+<div class="bigidea"><div class="bi-label">The spread is the point</div><p>One lucky split could have reported 0.826; another 0.770. The standard deviation tells you how much of any difference between two models could be noise. <strong>A 1-point improvement with a 2-point spread is not an improvement yet.</strong></p></div>
+
+<div class="module-header teal" data-num="4" id="lab">
+  <div class="mod-label">Lab 15 · 22 minutes in class</div>
+  <h2>Overfit on purpose, then fix it</h2>
+</div>
+<p>Lab 15 — <code>CSC4315_Lab15_Overfit_Then_Fix_It</code>. scikit-learn on a laptop CPU, under a minute. Overfit on purpose, then three fixes — a penalty, early stopping, less capacity — in one figure and one table.</p>
+
+<h3 id="next">Before Tuesday</h3>
+<ol><li><strong>Finish Lab 15.</strong></li><li><strong>Read</strong> Computer Vision series L1 (Images as Data) and L2 (Convolution) — Tuesday assumes them.</li><li><strong>Start Lab 16's first cell</strong> on Colab before class: it downloads a dataset and a pretrained network.</li></ol>
+<div class="callout tip"><div class="callout-icon">➡️</div><div class="callout-body"><strong>Session 23 — Tuesday 24 November, 16:00</strong><p>Images at realistic scale: why a dense network on pixels does not scale, what a convolutional filter does about it, and borrowing a network that has already learned to see.</p></div></div>
+
+</div>
+
+<footer>
+  <strong>CSC 4315 — Artificial Intelligence</strong> · Session 22 of 30 · Fall 2026<br>
+  Prof. Guillaume Sanje Mpacko, Ph.D. · School of Science and Engineering · International University of Grand-Bassam
+</footer>
+
+<script>
+function tog(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+
+</body>
+</html>
