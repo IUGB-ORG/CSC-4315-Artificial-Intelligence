@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CSC 4315 — Lab Notebooks</title>
+<style>
+:root{
+  --ink:#172033;
+  --muted:#5c667a;
+  --paper:#fbfcfe;
+  --card:#ffffff;
+  --line:#dce3ee;
+  --violet:#6d46d9;
+  --blue:#198fd1;
+  --gold:#d99a19;
+  --green:#208b70;
+  --shadow:0 10px 28px rgba(31,45,72,.09);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 12% 4%, rgba(25,143,209,.10), transparent 27rem),
+    radial-gradient(circle at 88% 2%, rgba(109,70,217,.10), transparent 25rem),
+    var(--paper);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55;
+}
+a{color:inherit}
+.shell{width:min(1080px,calc(100% - 34px));margin:0 auto}
+header{padding:54px 0 30px}
+.eyebrow{
+  display:inline-block;padding:7px 12px;border:1px solid #dec78f;border-radius:999px;
+  background:#fffaf0;color:#755915;font-size:.79rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase
+}
+h1{font-size:clamp(2rem,5vw,3.9rem);line-height:1.02;margin:18px 0 12px;letter-spacing:-.045em}
+h1 .accent{color:var(--violet)}
+.lead{max-width:760px;color:var(--muted);font-size:1.08rem;margin:0}
+.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 12px;color:#4b5568;font-weight:650;font-size:.9rem}
+nav.top{display:flex;gap:10px;flex-wrap:wrap;margin:2px 0 28px}
+nav.top a{
+  text-decoration:none;background:#fff;border:1px solid var(--line);padding:9px 13px;border-radius:10px;
+  color:#344054;font-weight:750
+}
+nav.top a:hover{border-color:#a9b9d0;transform:translateY(-1px)}
+.section-title{font-size:1.35rem;margin:22px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding-bottom:46px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{
+  position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:20px;box-shadow:var(--shadow);text-decoration:none;transition:.18s ease;
+  min-height:146px;display:flex;flex-direction:column
+}
+.card:hover{transform:translateY(-3px);border-color:#b9c6d8;box-shadow:0 14px 34px rgba(31,45,72,.13)}
+.icon{font-size:1.75rem;line-height:1;margin-bottom:14px}
+.card h2,.card h3{margin:0 0 7px;line-height:1.18}
+.card h2{font-size:1.22rem}.card h3{font-size:1.06rem}
+.card p{margin:0;color:var(--muted);font-size:.93rem}
+.card .tag{margin-top:auto;padding-top:15px;color:#50627a;font-size:.8rem;font-weight:800;letter-spacing:.035em}
+.num{
+  position:absolute;right:16px;top:14px;font-size:.75rem;font-weight:900;color:#8b95a7;
+  background:#f5f7fa;border:1px solid #e6ebf2;border-radius:999px;padding:4px 8px
+}
+footer{border-top:1px solid var(--line);padding:22px 0 36px;color:#6b7280;font-size:.88rem}
+@media(max-width:780px){.grid,.grid.two{grid-template-columns:1fr} header{padding-top:36px}}
+
+.logo-wrap{
+  margin:0 0 26px;
+  padding:14px 18px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.logo-wrap img{
+  display:block;
+  width:min(100%, 560px);
+  height:auto;
+  object-fit:contain;
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="logo-wrap">
+  <img src="../iugb.png" alt="International University of Grand-Bassam — Excellence · Accountability · Opportunity">
+</div>
+
+<header>
+  <span class="eyebrow">CSC 4315 · Fall 2026</span>
+  <h1>💻 Lab <span class="accent">Notebooks</span></h1>
+  <p class="lead">Eighteen hands-on labs that move from Python and NumPy foundations to neural networks, real data, transfer learning, language models, and prompting.</p>
+</header>
+<nav class="top">
+  <a href="../index.html">⌂ Course Home</a>
+  <a href="../Lectures/">📚 Lectures</a>
+  <a href="../Activities/">🧭 Activities</a>
+</nav>
+<main class="grid">
+
+  <a class="card" href="CSC4315_Lab01_Five_Functions.pdf" target=_blank>
+    <span class="num">LAB 1</span>
+    <div class="icon">🐍</div>
+    <h3>Five Functions</h3>
+    <p>Python I · functions, conditionals, loops</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab02_Grids_And_Slices.pdf" target=_blank>
+    <span class="num">LAB 2</span>
+    <div class="icon">🧩</div>
+    <h3>Grids &amp; Slices</h3>
+    <p>Python II · lists, indexing, slicing</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab03_Arrays_And_Shapes.pdf" target=_blank>
+    <span class="num">LAB 3</span>
+    <div class="icon">🧮</div>
+    <h3>Arrays &amp; Shapes</h3>
+    <p>NumPy I · arrays, reshape, indexing</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab04_Vectorise_And_Plot.pdf" target=_blank>
+    <span class="num">LAB 4</span>
+    <div class="icon">📈</div>
+    <h3>Vectorize &amp; Plot</h3>
+    <p>NumPy II · broadcasting and plotting</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab05_A_Layer_By_Hand.pdf" target=_blank>
+    <span class="num">LAB 5</span>
+    <div class="icon">🧠</div>
+    <h3>A Layer by Hand</h3>
+    <p>Matrix multiplication as a neural layer</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab06_Descend_And_Plot.pdf" target=_blank>
+    <span class="num">LAB 6</span>
+    <div class="icon">⛰️</div>
+    <h3>Gradient Descent</h3>
+    <p>Descend on a loss surface and plot the path</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab07_Exact_Fit_And_Descended_Fit.pdf" target=_blank>
+    <span class="num">LAB 7</span>
+    <div class="icon">📉</div>
+    <h3>Exact Fit vs. Descent</h3>
+    <p>Linear regression two ways</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab08_One_Neuron.pdf" target=_blank>
+    <span class="num">LAB 8</span>
+    <div class="icon">🧠</div>
+    <h3>One Neuron</h3>
+    <p>Sigmoid, cross-entropy, decision boundary</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab09_Forward_Pass_By_Hand.pdf" target=_blank>
+    <span class="num">LAB 9</span>
+    <div class="icon">➡️</div>
+    <h3>Forward Pass by Hand</h3>
+    <p>Hand-compute a 2–3–1 network</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab10_Backprop_Skeleton.pdf" target=_blank>
+    <span class="num">LAB 10</span>
+    <div class="icon">🔁</div>
+    <h3>Backpropagation</h3>
+    <p>Complete a backprop skeleton and check gradients</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab11_Training_Loop_On_Digits.pdf" target=_blank>
+    <span class="num">LAB 11</span>
+    <div class="icon">🔢</div>
+    <h3>Training Loop on Digits</h3>
+    <p>Pure NumPy training loop on digits</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab12_One_Model_Three_Frameworks.pdf" target=_blank>
+    <span class="num">LAB 12</span>
+    <div class="icon">🧰</div>
+    <h3>One Model, Three Frameworks</h3>
+    <p>NumPy, scikit-learn, PyTorch/Keras</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab13_Four_Broken_Scripts.pdf" target=_blank>
+    <span class="num">LAB 13</span>
+    <div class="icon">🛠️</div>
+    <h3>Four Broken Scripts</h3>
+    <p>Diagnose common training failures</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab14_A_Leak_Proof_Pipeline.pdf" target=_blank>
+    <span class="num">LAB 14</span>
+    <div class="icon">🔒</div>
+    <h3>Leak-Proof Pipeline</h3>
+    <p>Real data, preprocessing, and leakage</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab15_Overfit_Then_Fix_It.pdf" target=_blank>
+    <span class="num">LAB 15</span>
+    <div class="icon">🎯</div>
+    <h3>Overfit, Then Fix It</h3>
+    <p>Regularization and validation</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab16_Transfer_Learning_On_Images.pdf" target=_blank>
+    <span class="num">LAB 16</span>
+    <div class="icon">🖼️</div>
+    <h3>Transfer Learning on Images</h3>
+    <p>Fine-tune a pretrained image model</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab17_Generate_Then_Fine_Tune.pdf" target=_blank>
+    <span class="num">LAB 17</span>
+    <div class="icon">💬</div>
+    <h3>Generate, Then Fine-Tune</h3>
+    <p>Use and adapt a pretrained language model</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+
+  <a class="card" href="CSC4315_Lab18_Five_Prompt_Revisions.pdf" target=_blank>
+    <span class="num">LAB 18</span>
+    <div class="icon">✨</div>
+    <h3>Five Prompt Revisions</h3>
+    <p>Prompting as an engineering process</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+</main>
+<footer>CSC 4315 · Artificial Intelligence · Lab Notebooks</footer>
+</div>
+</body>
+</html>
