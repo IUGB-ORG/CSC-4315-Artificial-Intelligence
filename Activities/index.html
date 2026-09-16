@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CSC 4315 — Activities</title>
+<style>
+:root{
+  --ink:#172033;
+  --muted:#5c667a;
+  --paper:#fbfcfe;
+  --card:#ffffff;
+  --line:#dce3ee;
+  --violet:#6d46d9;
+  --blue:#198fd1;
+  --gold:#d99a19;
+  --green:#208b70;
+  --shadow:0 10px 28px rgba(31,45,72,.09);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 12% 4%, rgba(25,143,209,.10), transparent 27rem),
+    radial-gradient(circle at 88% 2%, rgba(109,70,217,.10), transparent 25rem),
+    var(--paper);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55;
+}
+a{color:inherit}
+.shell{width:min(1080px,calc(100% - 34px));margin:0 auto}
+header{padding:54px 0 30px}
+.eyebrow{
+  display:inline-block;padding:7px 12px;border:1px solid #dec78f;border-radius:999px;
+  background:#fffaf0;color:#755915;font-size:.79rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase
+}
+h1{font-size:clamp(2rem,5vw,3.9rem);line-height:1.02;margin:18px 0 12px;letter-spacing:-.045em}
+h1 .accent{color:var(--violet)}
+.lead{max-width:760px;color:var(--muted);font-size:1.08rem;margin:0}
+.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 12px;color:#4b5568;font-weight:650;font-size:.9rem}
+nav.top{display:flex;gap:10px;flex-wrap:wrap;margin:2px 0 28px}
+nav.top a{
+  text-decoration:none;background:#fff;border:1px solid var(--line);padding:9px 13px;border-radius:10px;
+  color:#344054;font-weight:750
+}
+nav.top a:hover{border-color:#a9b9d0;transform:translateY(-1px)}
+.section-title{font-size:1.35rem;margin:22px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding-bottom:46px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{
+  position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:20px;box-shadow:var(--shadow);text-decoration:none;transition:.18s ease;
+  min-height:146px;display:flex;flex-direction:column
+}
+.card:hover{transform:translateY(-3px);border-color:#b9c6d8;box-shadow:0 14px 34px rgba(31,45,72,.13)}
+.icon{font-size:1.75rem;line-height:1;margin-bottom:14px}
+.card h2,.card h3{margin:0 0 7px;line-height:1.18}
+.card h2{font-size:1.22rem}.card h3{font-size:1.06rem}
+.card p{margin:0;color:var(--muted);font-size:.93rem}
+.card .tag{margin-top:auto;padding-top:15px;color:#50627a;font-size:.8rem;font-weight:800;letter-spacing:.035em}
+.num{
+  position:absolute;right:16px;top:14px;font-size:.75rem;font-weight:900;color:#8b95a7;
+  background:#f5f7fa;border:1px solid #e6ebf2;border-radius:999px;padding:4px 8px
+}
+footer{border-top:1px solid var(--line);padding:22px 0 36px;color:#6b7280;font-size:.88rem}
+@media(max-width:780px){.grid,.grid.two{grid-template-columns:1fr} header{padding-top:36px}}
+
+.logo-wrap{
+  margin:0 0 26px;
+  padding:14px 18px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.logo-wrap img{
+  display:block;
+  width:min(100%, 560px);
+  height:auto;
+  object-fit:contain;
+}
+
+
+.instructor-credit{
+  margin-top:16px;
+  display:inline-flex;
+  flex-direction:column;
+  gap:2px;
+  padding:11px 14px;
+  background:#ffffff;
+  border:1px solid var(--line);
+  border-left:4px solid var(--violet);
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(31,45,72,.06);
+}
+.instructor-credit strong{
+  font-size:.98rem;
+  color:var(--ink);
+}
+.instructor-credit span{
+  font-size:.88rem;
+  color:var(--muted);
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="logo-wrap">
+  <img src="../iugb.png" alt="International University of Grand-Bassam — Excellence · Accountability · Opportunity">
+</div>
+
+<header>
+  <span class="eyebrow">CSC 4315 · Fall 2026</span>
+  <h1>🧭 Class <span class="accent">Activities</span></h1>
+  <p class="lead">Six non-lab activities: worksheets, demonstrations, an exploration, and a paper exercise that reinforce key ideas without requiring a full coding lab.</p>
+  <div class="instructor-credit">
+    <strong>Guillaume Sanje Mpacko, Ph.D.</strong>
+    <span>Associate Professor of Artificial Intelligence and Software Engineering</span>
+  </div>
+
+</header>
+<nav class="top">
+  <a href="../index.html">⌂ Course Home</a>
+  <a href="../Lectures/">📚 Lectures</a>
+  <a href="../Labs/">💻 Lab Notebooks</a>
+</nav>
+<main class="grid two">
+
+  <a class="card" href="CSC4315_S02-03_Worksheet_Where_The_Rules_Come_From.pdf" target=_blank>
+    <span class="num">S02–03</span>
+    <div class="icon">🧭</div>
+    <h3>Where Do the Rules Come From?</h3>
+    <p>Worksheet · classify systems by rules, search, and learning</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+  <a class="card" href="CSC4315_S12_Demo_The_XOR_Wall.pdf" target=_blank>
+    <span class="num">S12</span>
+    <div class="icon">🚧</div>
+    <h3>The XOR Wall</h3>
+    <p>Demo · why one layer cannot solve XOR</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+  <a class="card" href="CSC4315_S21_Worksheet_Accuracy_Is_Not_Enough.pdf" target=_blank>
+    <span class="num">S21</span>
+    <div class="icon">🎯</div>
+    <h3>Accuracy Is Not Enough</h3>
+    <p>Worksheet · confusion matrix, precision, and recall</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+  <a class="card" href="CSC4315_S24_Explore_Tokens_And_Embeddings.pdf" target=_blank>
+    <span class="num">S24</span>
+    <div class="icon">🔤</div>
+    <h3>Tokens &amp; Embeddings</h3>
+    <p>Explore · text as numbers and vector geometry</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+  <a class="card" href="CSC4315_S25_Paper_One_Attention_Head.pdf" target=_blank>
+    <span class="num">S25</span>
+    <div class="icon">👁️</div>
+    <h3>One Attention Head</h3>
+    <p>Paper exercise · queries, keys, values, and attention</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+  <a class="card" href="CSC4315_S28_Demo_A_Small_Honest_Agent.pdf" target=_blank>
+    <span class="num">S28</span>
+    <div class="icon">🤖</div>
+    <h3>A Small Honest Agent</h3>
+    <p>Demo · agents, tools, retrieval, and limits</p>
+    <div class="tag">OPEN PDF →</div>
+  </a>
+</main>
+<footer>CSC 4315 · Artificial Intelligence · Activities</footer>
+</div>
+</body>
+</html>
